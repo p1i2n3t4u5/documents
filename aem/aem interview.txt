@@ -1,0 +1,142 @@
+*************************AEM Advanced Developer Training ************************
+
+1) How to do debug in AEM.
+
+2) OSGI Bundle - Basics
+Links : http://www.javaworld.com/article/2077837/java-se/java-se-hello-osgi-part-1-bundles-for-beginners.html
+		http://www.computepatterns.com/76/osgi-component-vs-service-in-aem/
+		http://felix.apache.org/documentation/subprojects/apache-felix-maven-scr-plugin/scr-annotations.html#service
+		http://felix.apache.org/documentation/subprojects/apache-felix-service-component-runtime.html
+		http://adobeaemclub.com/reading-osgi-configuration-properties/
+		http://www.computepatterns.com/43/osgi-component-in-aem-that-is-active-only-in-specific-run-mode-say-publish/
+		
+		
+3) JCR API
+
+		http://jackrabbit.apache.org/jcr/first-hops.html
+		http://www.programcreek.com/java-api-examples/index.php?api=javax.jcr.Node
+		https://docs.adobe.com/content/docs/en/spec/jcr/2.0/1_Preface.html
+		
+4) Sling API
+
+		http://www.slideshare.net/bdelacretaz/rapid-jcr-applications-development-with-sling-1196003
+5) Sling Servlets
+
+Links : https://helpx.adobe.com/experience-manager/using/custom-sling-servlets.html
+		https://hashimkhan.in/aem-adobecq5-code-templates/servlets/
+		http://therealcq.blogspot.in/2013/01/how-to-write-custom-slingservlet.html
+		http://scottsdigitalcommunity.blogspot.in/2013/06/posting-form-data-to-adobe-cq-using.html
+		https://aem6solutions.wordpress.com/2015/06/18/apache-sling-servletscript-resolver/
+		http://grepcode.com/file/repo1.maven.org/maven2/org.apache.sling/org.apache.sling.servlets.resolver/2.0.4-incubator/org/apache/sling/servlets/resolver/SlingServletResolver.java
+		http://www.tothenew.com/blog/aem-ways-to-populate-a-selection-widget/
+		
+		https://sling.apache.org/documentation/tutorials-how-tos/getting-resources-and-properties-in-sling.html
+		
+		http://aemcorner.blogspot.com/2014/11/introduction-to-sling-servlets-in-aem.html
+		
+		https://edivad.wordpress.com/2011/07/18/cq-sling-servlets-resourcetype/
+		https://helpx.adobe.com/experience-manager/using/resourcetypes.html
+
+		
+		
+		
+		Info : AEM allow few context path to be accessed as servlet, /bin is one of default path which is used for internal servlets, and for any project specific servlet you might need to use some different content path for that you need to add your context path in OSGI service Apache Sling Servlet Resolver PID: org.apache.sling.servlets.resolver.SlingServletResolver
+		
+
+6) Sling Models
+
+
+	https://helpx.adobe.com/experience-manager/using/sling_models.html
+	https://sling.apache.org/documentation/bundles/models.html
+	http://www.aemcq5tutorials.com/tutorials/adobe-aem-cq5-tutorials/sling-model-sightly-aem/
+	http://labs.6dglobal.com/blog/2014-11-21/sling-models-for-fun-and-profit/
+	http://www.slideshare.net/StefanoCelentano/introduction-to-sightly-and-sling-models
+	https://rmengji.wordpress.com/2015/08/26/sightly-sling-models-amazing-combination/
+	http://adobeaemclub.com/powerful-sling-modal-and-sightly-with-jsoup-in-aem-6-x/
+	http://adobeaemclub.com/sightly-pagination-component-using-sling-model-and-javascript-use-api-in-aem-6-1/
+	
+	
+	
+7) Sling Events
+
+	http://blogs.adobe.com/experiencedelivers/experience-management/event_handling_incq/
+	
+8) Sling Scheduling
+9) User Management.
+10) Sightly
+11) Component Creating using Sightly
+12) AEM Workflow
+
+		http://www.aemcq5tutorials.com/tutorials/steps-to-create-a-workflow-in-aem/
+		https://hashimkhan.in/aem-adobecq5-code-templates/workflow-process/
+		Dynamic participant Step : http://adobeaemclub.com/workflow-dynamic-participant-step/
+		
+		
+13) AEM Forms 6.2 Basics
+*********************************** Important Links *****************************************************************
+Programatically Creating Page : http://www.albinsblog.com/2014/12/programmatically-create-page-in-cq5.html#.Vhsxy_mqpBc
+Upgrading AEM 5 to AEM 6 : http://www.albinsblog.com/2015/09/upgrading-aemadobe-cq5-5.6.1-to-aemadobe-cq5-6.1.html
+Programatically Set Meta Data : http://www.albinsblog.com/2015/07/Programatically-Set-Get-metadata-Asset-Adobe-CQ5-Adobe-AEM.html
+Deploy Bundle Packages : http://www.albinsblog.com/2015/06/deploying-bundlespackages-to-different-env-maven-adobecq5-adobeaem.html
+Performance Tuning : http://www.albinsblog.com/2015/06/performance-tuning-adobe-cq5adobe-aem.html
+MSM : http://www.albinsblog.com/2015/05/adobe-cqadobe-aem-configuration-multisites-through-configuration-factory.html
+MSM :http://www.albinsblog.com/2015/05/multi-site-management-in-aem.html
+How To Delete Users : http://www.albinsblog.com/2015/05/delete-disable-users-through-java-api-in-adobe-cq5.html
+How to Create/Delete Users : http://www.albinsblog.com/2015/04/how-to-craetemanage-groups-and-users-java-adobecq5.html
+How are you creating the renditions : http://www.albinsblog.com/2015/04/how-to-create-different-image-renditions-in-adobecq5.html
+How to use adaptive image : http://www.albinsblog.com/2015/04/how-to-use-html5-adaptive-image-in-AdobeCQ5.html
+How to get user info : http://www.albinsblog.com/2015/03/how-to-get-userinfo-through-java-api-in.html
+How to get child pages of a root page : http://www.albinsblog.com/2015/03/how-to-get-child-pages-of-root-page.html
+How to get published date : http://www.albinsblog.com/2015/03/how-to-get-published-date-of-page.html
+How to retrieve the pages created with particular template using Query Builder API - Adobe CQ5 :http://www.albinsblog.com/2015/02/how-to-retrieve-pages-created-with.html
+How to Retrieve/Update the configuration details through Configuration Admin Service - Adobe CQ5 :http://www.albinsblog.com/2015/01/retrievingupdating-configuration.html
+How to Modify the Node permissions through Java - Adobe CQ5:http://www.albinsblog.com/2015/01/modify-node-permissions-through-java.html
+Check replication Status : http://www.albinsblog.com/2015/02/how-to-check-replication-status-through.html
+Encript data : http://www.albinsblog.com/2014/12/encryptingdecrypting-data-in-adobe-cq5.html
+building executable jar : http://www.albinsblog.com/2014/12/building-executable-jar-file-with.html
+programatically creating nodes : http://www.albinsblog.com/2014/08/programmatically-creating-nodes-in.html
+AEM Rest Integration : http://www.albinsblog.com/2014/07/integrating-cq5-with-rest-services.html
+
+
+REST Info : https://javabrains.io/courses/javaee_jaxrs/lessons/REST-and-HTTP
+			http://www.codingpedia.org/ama/tutorial-rest-api-design-and-implementation-in-java-with-jersey-and-spring/
+			https://helpx.adobe.com/experience-manager/using/restful-services.html
+			
+
+
+ClientLibs : 
+
+		http://www.icidigital.com/blog/best-approaches-to-client-libraries-in-adobe-cq5-part-1/
+		http://agrajmangal.in/blog/aem/demystifying-cq-clientlibs/
+		
+		
+
+		
+		
+Sightly : 
+
+		http://aemtuts.com/aem-sightly-quick-reference/
+		
+		
+		
+Interview Questions :
+
+	http://www.aemcq5tutorials.com/interview-questions/tricky-cq5-interview-questions-for-beginners/
+	ClientLIbs : http://www.aemcq5tutorials.com/tutorials/create-client-libraries-in-aem/
+	DAM Media Handlers : https://docs.adobe.com/docs/en/cq/5-6-1/dam/dam_media_handlers.html
+	Tagging : http://experience-aem.blogspot.co.uk/2013/09/aem-56-bundle-intellij-idea-12-sample-auto-tag.html
+	Query Builder/Query Manager : http://stackoverflow.com/questions/21040299/cq5-java-querybuilder-api
+								  http://wemcode.wemblog.com/using-query
+								  http://www.tothenew.com/blog/full-text-search-in-aem-using-query-builder/
+								  
+	http://santhoshbhairi.blogspot.co.uk/2014/02/adobe-cq5.html
+	http://adobeaemclub.com/oak-tarmk-compaction/
+	https://helpx.adobe.com/experience-manager/kb/XtypeCqInclude.html
+	
+	https://chanchal.wordpress.com/2015/01/11/using-jax-rs-and-jersey-to-write-restful-services-in-osgi-apache-felix-adobe-cq5aem/
+	
+	
+	http://www.nateyolles.com/blog/2016/01/aem-akamai-custom-replication-agent
+	https://docs.adobe.com/docs/en/cq/5-6-1/developing/multi_site_manager_dev.html
+	http://aempodcast.com/2013/live-copy/live-copy-and-msm-custom-configuration/
+	http://suryakand-shinde.blogspot.co.uk/2015/01/custom-synchronisation-or-rollout.html
