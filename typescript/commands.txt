@@ -1,0 +1,12 @@
+
+PS C:\WINDOWS\system32> Set-ExecutionPolicy RemoteSigned
+
+
+PS C:\project\typescript> tsc main.ts
+PS C:\project\typescript> node main.js
+Hello World
+PS C:\project\typescript> tsc main.ts
+PS C:\project\typescript> tsc main --watch
+[12:22:08 PM] Starting compilation in watch mode...
+
+[12:22:11 PM] Found 0 errors. Watching for file changes.
