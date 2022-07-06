@@ -1,0 +1,14 @@
+query syntax(create,update,query,aggregation)
+aggregation and pipeline
+mongo java script procidures
+how mongo works in cluster
+mongo indexes
+file storage
+Special collection and index types: It supports time-to-live (TTL) collections for data that should expire at a certain time
+sharding
+Geospatial Indexes 
+transaction in mongo db
+charts in mongo
+Replica Set
+Replication Architecture in MongoDB.
+backup and restore in MongoDB
