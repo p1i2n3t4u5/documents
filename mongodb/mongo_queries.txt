@@ -1,14 +1,63 @@
 query syntax(create,update,query,aggregation)
+backup and restore in MongoDB
 aggregation and pipeline
 mongo java script procidures
-how mongo works in cluster
+
+query optimaization
 mongo indexes
 file storage
 Special collection and index types: It supports time-to-live (TTL) collections for data that should expire at a certain time
-sharding
+
 Geospatial Indexes 
 transaction in mongo db
 charts in mongo
+storage engine
+
+
 Replica Set
+sharding
 Replication Architecture in MongoDB.
-backup and restore in MongoDB
+how mongo works in cluster
+
+
+
+db.getCollection('productPrices').explain().aggregate([
+  {
+    "$match": {
+      "ratecardId": "62b94b1e3884547d4dce6b20"
+    }
+  },
+  {
+    "$group": {
+      _id: {
+        "ratecardId": "$ratecardId",
+        "productId": "$productId",
+        "commercialTypeId": "$commercialTypeId",
+        "channelId": "$channelId",
+        "periodId": "$periodId"
+      },
+      "dist": {
+        $addToSet: "$publishedDate"
+      }
+    }
+  },
+  {
+    "$match": {
+      "dist": {
+        $ne: null
+      }
+    }
+  },
+  {
+    $match: {
+      $expr: {
+        $gte: [
+          {
+            $size: "$dist"
+          },
+          1
+        ]
+      }
+    }
+  }
+])
