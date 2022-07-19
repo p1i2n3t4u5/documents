@@ -1,0 +1,1617 @@
+mongod --dbpath "C:\Program Files\MongoDB\Server\3.2\data\db"
+
+
+Query: { "$and" : [ { "status" : { "$java" : DRAFT } } ] }, Fields: { }, Sort: { "name" : -1, "type" : -1 }
+
+
+Query: { "$and" : [ { "status" : { "$java" : DRAFT } } ] }, Fields: { }, Sort: { "name" : 1, "type" : 1 }
+
+
+
+
+db.getCollection('ueHeader').find().sort({"name":1,"type" : -1}).skip(900).limit(10)
+
+
+db.getCollection('ueHeader').find().sort({{"$subtract":["dateRange.startDate","$dateRange.endDate"]}:1}).limit(10)
+
+
+db.runCommand({ aggregate: "myCollection", pipeline: [{"$match":{}}], explain: true }).explain()
+
+db.getCollection('ueHeader').totalIndexSize() 
+
+db.collection.find().sort({field: 1}).collation({locale: "en_US", numericOrdering: true})
+db.collection.aggregate([{$sort : {internalDate : 1}}], {collation: {locale: "en_US",numericOrdering: true}});
+
+
+db.productPrices.updateMany({"ratecardId":"603d67630d282f1c92db26f8","productId":{"$in":["601dbd40e2fc0d0cec9cd803",   "601dbc75a26d600da4cc8086","601dbd66e2fc0d0cec9cd814"]},"parentPeriodId":{"$in":["603d67630d282f1c92db26e4","603d67630d282f1c92db26eb"]},
+    "status":"DELETE_SENT"}, {$set: {"status": "PUBLISHED"}}, {multi: true});
+	
+	db.getCollection('productPrices').distinct("ratecardId",{"startDate":{"$exists":false},"endDate":{"$exists":false}})
+	
+	Same Id - Multiple Names 
+	db.getCollection('productPrices').distinct("primaryDayPartShortName",{"ratecardId":"602c9e1e0d282f1c92d66f90",   
+	    "primaryDayPartId" : "Ab8Hbx9OSy-2KzjSdNLuvw"})
+	2. Same Name - Multiple Ids
+	db.getCollection('productPrices').distinct("primaryDayPartId",{"ratecardId":"602c9e1e0d282f1c92d66f90",   
+	    "primaryDayPartShortName" :"ROS"})
+		
+		db.getCollection('ratecard').find({"dayParts":{ $size: 2 } } );
+		
+		
+	
+	
+	Ptod semi publish issue:
+	
+
+db.getCollection('productPrices').aggregate([{"$match":{"status":"PUBLISHED"}},{"$group":{_id:{"ratecardId" : "$ratecardId","productId" : 
+"$productId","commercialTypeId" : "$commercialTypeId","channelId" : "$channelId","periodId" : "$periodId"},"dist": { $addToSet: "$publishedDate" 
+}}},{"$match":{"dist":{$ne:null}}},{$match: {$expr: {$gte: [{$size: "$dist"}, 2]}}}])
+
+
+db.getCollection('productPrices').find({"ratecardId":"60ba33503afd3b2d1c83abf4","productId":"601dbd43e2fc0d0cec9cd804","unitRate":null,
+"channelId":"R5wgimduTTGGoLyAl-RKFA","commercialTypeId":"0KpL5zefTsWBJTWB-nD6Nw","publishedDate":new Date("2021-11-11T01:42:59.490Z"),
+"startDate":new Date("2022-03-28"),"endDate":new Date("2022-06-26")}).count()
+
+Output - 182
+
+-------------------Detection Query---------------------
+db.productPrices.aggregate([
+ {$match: {"unitRate":null,"status":"PUBLISHED"}},
+ {$group: {"_id": {"ratecardId": "$ratecardId", "productId" : "$productId","productName":"$productName", "channelId" : "$channelId","code":"$code","periodName":"$periodName",
+ "periodId" :"$periodId","commercialTypeId":"$commercialTypeId","commTypeName":"$commTypeName"}}}
+]).forEach((doc)=>{
+ var count = db.getCollection('productPrices').find({"ratecardId":doc._id.ratecardId,"productId":doc._id.productId,"unitRate":null,
+"channelId":doc._id.channelId,"commercialTypeId":doc._id.commercialTypeId,"periodId":doc._id.periodId,"status":"PUBLISHED"}).count()
+if(count < 183){
+ printjson(doc);
+ }
+});
+
+
+
+
+
+
+
+db.getCollection('productPrices').aggregate(
+[{
+"$match":{"status":"PUBLISHED"}
+},
+{
+"$group":{
+_id:{
+"ratecardId" : "$ratecardId",
+"productId" : "$productId",
+"commercialTypeId" : "$commercialTypeId",
+"channelId" : "$channelId",
+"periodId" : "$periodId"
+},
+"dist": { $addToSet: "$publishedDate" }
+}
+},
+{
+"$match":{"dist":{$ne:null}}
+},
+{
+$match: {
+$expr: {
+$gte: [{
+$size: "$dist"
+}, 2]
+}
+}
+}
+])
+
+
+var rcs = db.getCollection('ratecard').find({_id: ObjectId("")},
+{name:1,lastPublishedDate:1,"pricingDemo.demoId":1})
+.sort({lastPublishedDate:-1})
+
+
+
+rcs.forEach(function(doc){
+var affectedList= db.getCollection('productPrices').aggregate([
+{ $match: {ratecardId: doc._id.str, status:{$nin:["DELETED"]}
+}},
+{ $group: {
+_id: { ratecardId: "$ratecardId", periodId: "$periodId", productId: "$productId",
+channelId: "$channelId", commercialTypeId: "$commercialTypeId",
+"productName" : "$productName",
+"commTypeName" : "$commTypeName",
+"code" : "$code",
+"periodName" : "$periodName",
+demoId:"$demo.demoId" },
+count: { $sum: 1 }
+}},
+{$match: {count: {"$gt": 1}}},
+{ $group: {
+_id: { ratecardId: "$_id.ratecardId", periodId: "$_id.periodId", productId: "$_id.productId",
+channelId: "$_id.channelId", commercialTypeId: "$_id.commercialTypeId",
+"productName" : "$_id.productName",
+"commTypeName" : "$_id.commTypeName",
+"code" : "$_id.code",
+"periodName" : "$_id.periodName"}
+}}
+],{allowDiskUse:true}).toArray();
+
+
+
+affectedList.forEach(function(rc){
+print(rc);
+})
+});
+
+
+db.productPrices.aggregate([
+{$match: {"unitRate":null,"status":"PUBLISHED"}},
+{$group: {"_id": {"ratecardId": "$ratecardId", "productId" : "$productId","productName":"$productName", "channelId" : "$channelId","code":"$code","periodName":"$periodName",
+"periodId" :"$periodId","commercialTypeId":"$commercialTypeId","commTypeName":"$commTypeName"}}}
+]).forEach((doc)=>{
+var count = db.getCollection('productPrices').find({"ratecardId":doc._id.ratecardId,"productId":doc._id.productId,"unitRate":null,
+"channelId":doc._id.channelId,"commercialTypeId":doc._id.commercialTypeId,"periodId":doc._id.periodId,"status":"PUBLISHED"}).count()
+var unitNotNullCount = db.getCollection('productPrices').find({"ratecardId":doc._id.ratecardId,"productId":doc._id.productId,"unitRate":{$ne:null},
+"channelId":doc._id.channelId,"commercialTypeId":doc._id.commercialTypeId,"periodId":doc._id.periodId,"status":"PUBLISHED"}).count()
+if(count < 183 && unitNotNullCount>0){
+ print(doc._id.ratecardId + "|"+ doc._id.productName + "|" + doc._id.code + "|"+ doc._id.commTypeName + "|"+ doc._id.periodName)
+}
+});
+
+
+var rcs = db.getCollection('ratecard').find({"_id":"6031b9610d282f1c92d8332c","5fb580e3441d8f682e02ba87","60241c68808d5c1cd65c9e0e","60ba33503afd3b2d1c83abf4"},
+{name:1,lastPublishedDate:1})
+.sort({lastPublishedDate:-1})
+
+rcs.forEach(function(rc){
+var affectedList = db.productPrices.aggregate([
+{$match: {"unitRate":null,"status":"PUBLISHED"}},
+{$group: {"_id": {"ratecardId": "$ratecardId", "productId" : "$productId","productName":"$productName", "channelId" : "$channelId","code":"$code","periodName":"$periodName",
+"periodId" :"$periodId","commercialTypeId":"$commercialTypeId","commTypeName":"$commTypeName"}}}
+]).forEach((doc)=>{
+var count = db.getCollection('productPrices').find({"ratecardId":doc._id.ratecardId,"productId":doc._id.productId,"unitRate":null,
+"channelId":doc._id.channelId,"commercialTypeId":doc._id.commercialTypeId,"periodId":doc._id.periodId,"status":"PUBLISHED"}).count()
+var unitNotNullCount = db.getCollection('productPrices').find({"ratecardId":doc._id.ratecardId,"productId":doc._id.productId,"unitRate":{$ne:null},
+"channelId":doc._id.channelId,"commercialTypeId":doc._id.commercialTypeId,"periodId":doc._id.periodId,"status":"PUBLISHED"}).count()
+if(count < 183 && unitNotNullCount>0){
+ print(rc.name + "|"+ doc._id.productName + "|" + doc._id.code + "|"+ doc._id.commTypeName + "|"+ doc._id.periodName)
+ }
+});
+});
+
+
+
+db.getCollection('ratecard').find({"isActive": true,"platform": "LINEAR"}).sort({"channels.displayCallLetter": 1,"divisions.name": 1})
+
+db.collection('ratecard').aggregate([
+    { $match: {"isActive": true,"platform": "LINEAR"}},
+    { $unwind: '$channels' },
+    { $sort: { 'channels.displayCallLetter': 1 }},
+	{ $group: { _id: '$channels.displayCallLetter', friends: { $push: '$channels'}}]),
+	{ $unwind: '$divisions' },
+    { $sort: { 'divisions.name': 1 }},
+    { $group: { _id: '$divisions.name', friends: { $push: '$friends'}}])
+	
+	
+	db.collection('ratecard').aggregate([
+    { $match: {"isActive": true,"platform": "LINEAR"}},
+    { $unwind: '$channels' },
+    { $sort: { 'displayCallLetter': -1 }},
+    { $group: { _id: '$channels.displayCallLetter', channels: { $push: '$channels'}}])
+	.aggregate([
+    { $match: {"isActive": true,"platform": "LINEAR"}},
+    { $unwind: '$divisions' },
+    { $sort: { 'name': -1 }},
+    { $group: { _id: '$divisions.name', divisions: { $push: '$divisions'}}])
+	
+	
+	
+	db.getCollection('ratecard').aggregate([{$match: {"isActive": true,"platform": "LINEAR",_id:ObjectId('5e2ed7ce9e7b364c5d127e63')}},{ $unwind: '$channels'},{ $sort:{'displayCallLetter':1}}])
+	
+	
+	db.getCollection('ratecard').aggregate([{$match: {"isActive": true,"platform": "LINEAR",_id:ObjectId('5e2ed7ce9e7b364c5d127e63')}},{ $unwind: '$channels'},{ $sort:{'displayCallLetter': - 1}},{ $group: { _id: '$channels.code', channelss: { $push: '$channels'}}}])
+	
+	db.getCollection('ratecard').aggregate([{$match: {"isActive": true,"platform": "LINEAR",_id:ObjectId('5e2ed7ce9e7b364c5d127e63')}},{ $unwind: '$channels'},{ $sort:{'displayCallLetter': - 1}},{ $group: { _id: '$_id', channelss: { $push: '$channels'}}}])
+	
+	
+	db.getCollection('ratecard').aggregate([{$match: {"isActive": true,"platform": "LINEAR"}},{ $unwind: '$channels'},{ $sort:{'channels.displayCallLetter': - 1}},{ $group: { _id: '$_id', opchannels: { $push: '$channels'}}},{$project: {'channels': '$opchannels'}}])
+	
+	db.getCollection('ratecard').aggregate({$match: {'isActive': true,'platform': 'LINEAR'}},{ $unwind: '$channels'},{ $sort:{'channels.displayCallLetter': - 1}},{ $group: { _id: '$_id', opchannels: { $push: '$channels'}}},{$project: {'channels': '$opchannels'}})
+	
+	db.getCollection('ratecard').aggregate([{$match: {"isActive": true,"platform": "LINEAR"}},{ $unwind: '$channels'},{ $sort:{'channels.displayCallLetter': - 1}},{ $group: { _id: '$_id', opchannels: { $push: '$channels'}}},{$project: {'channels': '$opchannels'}}])
+	
+	db.servers.aggregate(
+    {$unwind: '$service.apps.updates'}, 
+    {$sort: {'service.apps.updates.date': 1}}, 
+    {$group: {_id: '$_id', 'updates': {$push: '$service.apps.updates'}}}, 
+    {$project: {'service.apps.updates': '$updates'}})
+	
+	db.getCollection('ratecard').aggregate([{$match: {"isActive": true,"platform": "LINEAR"}},{
+    $addFields: { channels_count: {$size: { "$ifNull": [ "$channels", [] ] } } }}, 
+    {$sort: {"channels_count":1}}])
+	
+	db.test.aggregate([
+    {
+        $addFields: { answers_count: {$size: { "$ifNull": [ "$answers", [] ] } } }
+    }, 
+    {   
+        $sort: {"answers_count":1} 
+    }
+])
+
+
+
+
+db.getCollection('ratecard').aggregate([{$match: {"isActive": true,"platform": "LINEAR"}},{
+    $addFields: { channels_count: {$size: { "$ifNull": [ "$channels", [] ] } } }}, 
+    {$sort: {"channels_count":-1}}])
+	
+	
+db.getCollection('ratecard').aggregate([{$match: {"isActive": true,"platform": "LINEAR"}},
+   {$addFields: { channels_count: {$size: { "$ifNull": [ "$channels", [] ] } },channels_display:{$concat: [ "$status", " - ", "$platform" ]}}}, 
+   {$sort: {"channels_count":-1}}])
+   
+db.getCollection('ratecard').aggregate([{$match: {"isActive": true,"platform": "LINEAR"}},
+   {$addFields: { channels_count: {$size: { "$ifNull": [ "$channels", [] ] } },channels_display:{{"$reduce": {"input": "$channels","initialValue":"","in": {"$concat": ["$$value.displayCallLetter","_","$$this"]}}}}}}, 
+   {$sort: {"channels_count":-1}}}}])
+	
+
+
+
+	[$channels.displayCallLetter]
+	
+abc,bcd
+bcd
+def,abc
+abc
+
+
+	
+abc	
+abc,bcd
+abc,def
+bcd	
+	
+	
+	 "Cumulative": {
+                "$reduce": {
+                    "input": "$doc",
+                    "initialValue": [],
+                    "in": {
+                        "$concatArrays": ["$$value", "$$this"]
+                    }
+                }
+            }
+			
+			
+{"$reduce": {"input": "$channels","initialValue":"","in": {"$concat": ["$$value.displayCallLetter","_","$$this"]}}}			
+	
+	
+	db.collection.aggregate([
+  { "$addFields": {
+    "values": { 
+      "$reduce": {
+        "input": "$values",
+        "initialValue": "",
+        "in": {
+          "$cond": {
+            "if": { "$eq": [ { "$indexOfArray": [ "$values", "$$this" ] }, 0 ] },
+            "then": { "$concat": [ "$$value", "$$this" ] },
+            "else": { "$concat": [ "$$value", "_", "$$this" ] }
+          }    
+        }
+      }        
+    }
+  }}
+])
+
+
+
+
+"$cond": {
+            "if": { "$eq": [ "$$value", "" ] },
+            "then": { "$concat": [ "$$value", "$$this" ] },
+            "else": { "$concat": [ "$$value", "-", "$$this" ] }
+          }
+		  
+		  
+		  
+		  
+		  
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR"
+    }
+  },
+  {
+    $addFields: {
+	      channels_display: {
+          "$reduce": {
+            "input": "$channels",
+            "initialValue": "",
+            "in": {
+              "$concat": [
+                "$$value.displayCallLetter",
+                "_",
+                "$$this"
+              ]
+            }
+        }
+      },
+      channels_count: {
+        $size: {
+          "$ifNull": [
+            "$channels",
+            [
+              
+            ]
+          ]
+        }
+      }
+
+    }
+  },
+  {
+    $sort: {
+      "channels_count": -1
+    }
+  }
+])		  
+		  
+		  
+		  
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR"
+    }
+  },
+  {
+    $addFields: {
+      channels_display: {
+        "$reduce": {
+          input:{$slice:["$channels",1,{$size:"$channels"}]}, 
+          initialValue:{$arrayElemAt:["$channels",0]}.displayCallLetter, 
+          in:{$concat:["$$value.displayCallLetter","-","$$this"]}
+        }
+      },
+      channels_count: {
+        $size: {
+          "$ifNull": [
+            "$channels",
+            [
+              
+            ]
+          ]
+        }
+      }
+    }
+  },
+  {
+    $sort: {
+      "channels_count": -1
+    }
+  }
+])		  
+		  
+		  
+		  
+		{ $group : {
+            _id : "$author",
+            books: { $push : "$$ROOT" }
+        }}  
+		  
+		  
+		  
+		
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR"
+    }
+  },
+
+  {
+    $addFields: {
+	channels_display: {
+           "$reduce": {
+            "input": "$channels",
+            "initialValue": "",
+            "in": {
+              "$concat": [
+                "$$value",
+                { $cond: { if: "$$value==""", then: "", else: ","} },
+                "$$this.displayCallLetter"
+              ]
+            }
+        }
+      },
+      channels_count: {
+        $size: {
+          "$ifNull": [
+            "$channels",
+            [
+              
+            ]
+          ]
+        }
+      }
+
+    }
+  },
+  {
+    $sort: {
+      
+      "channels_display": -1,
+      "templateName": 1 
+    }
+  }
+])
+		
+	
+
+{ $cond: { if: "{$strLenCP:$$value}"==="0", then: "", else: ","} }
+{ $cond: { if: "{$strLenCP:$$value}"==="0", then: "", else: ","} }
+{ $ifNull: [ <expression>, <replacement-expression-if-null> ] }
+
+$cond: { if: { $gte: [ "$qty", 250 ] }, then: 30, else: 20 }
+
+$cond: [ { $gte: [ "$strLenCP:$$value", 0 ] }, "", "," ]	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR"
+    }
+  },
+
+  {
+    $addFields: {
+	channels_display: {
+           "$reduce": {
+            "input": {"$ifNull": ["$channels",[]]},
+            "initialValue": "",
+            "in": {
+              "$concat": [
+                "$$value",
+                ",",
+                "$$this.displayCallLetter"
+              ]
+            }
+        }
+      },
+	  division_display: {
+           "$reduce": {
+            "input": {"$ifNull": ["$divisions",[]]},
+            "initialValue": "",
+            "in": {
+              "$concat": [
+                "$$value",
+                ",",
+                "$$this.name"
+              ]
+            }
+        }
+      },
+      channels_count: {
+        $size: {
+          "$ifNull": [
+            "$channels",
+            [
+              
+            ]
+          ]
+        }
+      },
+	   divisions_count: {
+        $size: {
+          "$ifNull": [
+            "$divisions",
+            [
+              
+            ]
+          ]
+        }
+      }
+
+    }
+  },
+  {
+    $sort: {
+       "channels_display": -1
+    }
+  }
+])
+
+
+
+
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR"
+    }
+  },
+
+  {
+    $addFields: {
+	channels_display: {
+           "$reduce": {
+            "input": {"$ifNull": ["$channels",[]]},
+            "initialValue": "",
+            "in": {
+              "$concat": [
+                "$$value",
+                {$cond:[{$eq:['$$value', '']}, "", ","] },
+                "$$this.displayCallLetter"
+              ]
+            }
+        }
+      },
+	  division_display: {
+           "$reduce": {
+            "input": {"$ifNull": ["$divisions",[]]},
+            "initialValue": "",
+            "in": {
+              "$concat": [
+                "$$value",
+                {$cond:[{$eq:['$$value', '']}, "", ","]},
+                "$$this.name"
+              ]
+            }
+        }
+      },
+      channels_count: {
+        $size: {
+          "$ifNull": [
+            "$channels",
+            [
+              
+            ]
+          ]
+        }
+      },
+	   divisions_count: {
+        $size: {
+          "$ifNull": [
+            "$divisions",
+            [
+              
+            ]
+          ]
+        }
+      }
+    }
+  },
+  {
+    $sort: {      
+       "division_display": 1
+    }
+  }
+])
+
+
+
+
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR"
+    }
+  },
+  {
+    $addFields: {
+	channels_display: {
+           "$reduce": {
+            "input": {"$ifNull": ["$channels",[]]},
+            "initialValue": "",
+            "in": {
+              "$concat": [
+                "$$value",
+                {$cond:[{$eq:['$$value', '']}, "", ","] },
+                "$$this.displayCallLetter"
+              ]
+            }
+        }
+      },
+	  division_display: {
+           "$reduce": {
+            "input": {"$ifNull": ["$divisions",[]]},
+            "initialValue": "",
+            "in": {
+              "$concat": [
+                "$$value",
+                {$cond:[{$eq:['$$value', '']}, "", ","]},
+                "$$this.name"
+              ]
+            }
+        }
+      }
+
+    }
+  },
+  {
+    $sort: {
+      
+       "division_display": 1
+    }
+  },
+  {$skip: 5},
+  {$limit: 20},
+])
+
+
+
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR"
+    }
+  },
+  {
+    $unwind: '$channels'
+  },
+  {
+    $sort: {
+      'channels.displayCallLetter': -1
+    }
+  },
+  {
+    $group: {
+      _id: '$_id',
+      opchannels: {
+        $push: '$channels.displayCallLetter'
+      }
+    }
+  },
+  {
+    $project: {
+      'channels': '$opchannels'
+    }
+  }
+])
+
+
+
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR"
+    }
+  },
+  {
+    $unwind: '$channels'
+  },
+  {
+    $sort: {
+      'channels.displayCallLetter': -1
+    }
+  },
+  {
+    $group: {
+      _id: '$_id',
+      opchannels: {
+        $push: '$channels.displayCallLetter'
+      },
+	  books: { $push : "$$ROOT" }
+    }
+  },
+  {
+    $project: {
+      'channels': '$opchannels'
+    }
+  }
+])
+
+
+
+
+
+
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR"
+    }
+  },
+  {
+    $addFields: {
+      channels_display: {
+        "$reduce": {
+          "input": {
+            "$ifNull": [
+              "$channels",
+              [
+                
+              ]
+            ]
+          },
+          "initialValue": "",
+          "in": {
+            "$concat": [
+              "$$value",
+              {
+                $cond: [
+                  {
+                    $eq: [
+                      '$$value',
+                      ""
+                    ]
+                  },
+                  "",
+                  ","
+                ]
+              },
+              "$$this.displayCallLetter"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    $addFields: {
+      division_display: {
+        "$reduce": {
+          "input": {
+            "$ifNull": [
+              "$divisions",
+              [
+                
+              ]
+            ]
+          },
+          "initialValue": "",
+          "in": {
+            "$concat": [
+              "$$value",
+              {
+                $cond: [
+                  {
+                    $eq: [
+                      '$$value',
+                      ""
+                    ]
+                  },
+                  "",
+                  ","
+                ]
+              },
+              "$$this.name"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    $sort: {
+      "channels_display": -1,
+      "division_display": -1
+    }
+  },
+  {
+    $skip: 0
+  },
+  {
+    $limit: 30
+  },
+  
+])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR"
+    }
+  },
+  {
+    $addFields: {
+      channels_display: {
+        "$reduce": {
+          "input": {
+            "$ifNull": [
+              "$channels",
+              [
+                
+              ]
+            ]
+          },
+          "initialValue": "",
+          "in": {
+            "$concat": [
+              "$$value",
+              {
+                $cond: [
+                  {
+                    $eq: [
+                      '$$value',
+                      ""
+                    ]
+                  },
+                  "",
+                  ","
+                ]
+              },
+              "$$this.displayCallLetter"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    $addFields: {
+      divisions_display: {
+        "$reduce": {
+          "input": {
+            "$ifNull": [
+              "$divisions",
+              [
+                
+              ]
+            ]
+          },
+          "initialValue": "",
+          "in": {
+            "$concat": [
+              "$$value",
+              {
+                $cond: [
+                  {
+                    $eq: [
+                      '$$value',
+                      ""
+                    ]
+                  },
+                  "",
+                  ","
+                ]
+              },
+              "$$this.name"
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    $sort: {
+      "channels_display": -1,
+      "divisions_display": -1
+    }
+  },
+  {
+    $skip: 0
+  },
+  {
+    $limit: 30
+  },
+  
+])
+
+
+
+
+
+
+
+[Document{{channels.code=Document{{$in=[NANA, 9w1tvT]}}}}, Document{{platform=LINEAR}}, Document{{isActive=true}}, Document{{isMarkAsDelete=false}}]
+
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR",
+      "isMarkAsDelete":false,
+      "channels.code":{
+		 $in:["NANA","9w1tvT"]
+	  }
+    }
+  },
+  {
+    $skip: 0
+  },
+  {
+    $limit: 30
+  },
+  
+])
+
+
+
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR",
+      "isMarkAsDelete": false,
+      "_id": {
+        $in: [
+          ObjectId('5e32af7e9e7b36294bd5735c'),
+          ObjectId('5e3c042f0b4bd82a8436bb73')
+        ]
+      },
+      "channels.code": {
+        $in: [
+          "NANA",
+          "9w1tvT"
+        ]
+      }
+    }
+  },
+  {
+    $skip: 0
+  },
+  {
+    $limit: 30
+  },
+  
+])
+
+
+,
+
+
+periodId: "5ddd75707909549403a305c8"
+productId: "5e4645fd84fad75f43569480"
+ratecardId: "5e46465a9e7b3627031c4834"
+channelId: "dHUwg-6cQ5qwL7UWWrYPSQ"
+commercialtype_id: "mdZ7QatVQhW_KvTRUWhxNQ"
+
+
+iWsZ9g
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR",
+      "isMarkAsDelete":false,
+      "channels.code":{
+		 $in:["DEMO_CHANNEL",iWsZ9g]
+	  }
+    }
+  },
+  { 
+      $unwind: '$channels'
+  },
+  {
+    $skip: 0
+  },
+  {
+    $limit: 100
+  },
+  
+])
+
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR",
+      "isMarkAsDelete":false,
+      "channels.code":{
+		 $in:["DEMO_CHANNEL","iWsZ9g"]
+	  }
+    }
+  },
+  { 
+      $unwind: '$channels'
+  },
+  {
+    $match: {
+      "channels.code":{
+		 $in:["DEMO_CHANNEL","iWsZ9g"]
+	  }
+    }
+  },
+  {
+  $group: {
+    _id: '$channels.code',
+    channels: {
+      $addToSet: '$channels'
+    }
+  }
+ }
+  
+])
+
+
+{ $group: { _id: '$_id', data: { $addToSet: '$data' } } }
+
+
+
+db.getCollection('ratecard').aggregate([
+  {
+    $match: {
+      "isActive": true,
+      "platform": "LINEAR",
+      "isMarkAsDelete":false,
+      "channels.code":{
+		 $in:["DEMO_CHANNEL","iWsZ9g"]
+	  }
+    }
+  },
+  { 
+      $unwind: '$channels'
+  },
+  {
+    $match: {
+      "channels.code":{
+		 $in:["DEMO_CHANNEL","iWsZ9g"]
+	  }
+    }
+  },
+  {
+  $group: {
+    _id: '$channels.code',
+    channels: {
+      $addToSet: '$channels'
+    }
+  }
+ }
+  
+])
+
+
+
+{
+  "platform": "LINEAR",
+  "channels": [
+ "DEMO_CHANNEL","iWsZ9g"
+  ]
+}
+
+
+{
+  "platform": "LINEAR",
+  "divisions": [
+    "qnm3m7V5SQGJcmiav2BmYg",
+    "PfVf1EYcTSWnPZzXHyAAJg"
+  ]
+}
+
+
+
+
+
+
+
+db.getCollection('productPrices').aggregate([
+  {
+    $match: {
+      
+      "id":{
+		 $in:["5ecd68051a01e85a183dd2be","5ece38ea4f2ec255241b5745","5ece38ea4f2ec255241b5746"]
+	  }
+    }
+  },
+  { 
+      $unwind: '$demo.secondaryRtgStreamMetrics'
+  }
+])
+
+
+
+db.getCollection('productPrices').aggregate([
+  {
+    $match: {
+      
+      "id":{
+		 $in:["5ecd68051a01e85a183dd2be","5ece38ea4f2ec255241b5745","5ece38ea4f2ec255241b5746"]
+	  }
+    }
+  },
+  { 
+      $unwind: '$channels'
+  },
+  {
+    $match: {
+      "channels.code":{
+		 $in:["DEMO_CHANNEL","iWsZ9g"]
+	  }
+    }
+  },
+  {
+  $group: {
+    _id: '$channels.code',
+    channels: {
+      $addToSet: '$channels'
+    }
+  }
+ }
+  
+])
+
+
+
+
+
+db.getCollection('productPrices').aggregate([
+  {
+    $match: {
+      
+      "_id":{
+           $in:[ObjectId("5ecd68051a01e85a183dd2be"),ObjectId("5ece38ea4f2ec255241b5745"),ObjectId("5ece38ea4f2ec255241b5746")]
+	  }
+    }
+  },
+  { 
+      $unwind: '$demo.secondaryRtgStreamMetrics'
+  }
+  ,
+  {
+  $group: {
+    _id: '$_id',
+    secondary: {
+      $addToSet: '$demo.secondaryRtgStreamMetrics._id'
+    }
+  }
+ },
+ {
+    $project: {
+      'channels': '$secondary'
+    }
+  }
+])
+
+
+
+
+db.getCollection('productPrices').aggregate([
+  {
+    $match: {
+      
+      "_id":{
+           $in:[ObjectId("5ecd68051a01e85a183dd2be"),ObjectId("5ece38ea4f2ec255241b5745"),ObjectId("5ece38ea4f2ec255241b5746")]
+	  }
+    }
+  },
+  { 
+      $unwind: '$demo.secondaryRtgStreamMetrics'
+  }
+  ,
+  {
+  $group: {
+    _id: '$_id',
+    secondary: {
+      $addToSet: '$demo.secondaryRtgStreamMetrics._id'
+    }
+  }
+ },
+ {
+    $project: {
+      'secid': '$secondary'
+    }
+  }
+])
+
+
+[Document{{$match=Document{{ratecardId=5ed0ae3dc35e315539a7a984}}}}, Document{{$group=Document{{_id=pppValues, channels=Document{{$addToSet=$channelId}}, dayParts=Document{{$addToSet=$primaryDayPartId}}, commercialTypes=Document{{$addToSet=$commercialTypeId}}, periods=Document{{$addToSet=$periodId}}}}}}]
+
+
+
+[
+  Document{
+    {
+      $match=Document{
+        {
+          ratecardId=5ed0ae3dc35e315539a7a984
+        }
+      }
+    }
+  },
+  Document{
+    {
+      $group=Document{
+        {
+          _id=pppValues,
+          channels=Document{
+            {
+              $addToSet=$channelId
+            }
+          },
+          dayParts=Document{
+            {
+              $addToSet=$primaryDayPartId
+            }
+          },
+          commercialTypes=Document{
+            {
+              $addToSet=$commercialTypeId
+            }
+          },
+          periods=Document{
+            {
+              $addToSet=$periodId
+            }
+          }
+        }
+      }
+    }
+  }
+]
+
+
+db.getCollection('productPrices').aggregate([
+  {
+    $match: {
+      
+      "_id":{
+           $in:[ObjectId("5ecd68051a01e85a183dd2be"),ObjectId("5ece38ea4f2ec255241b5745"),ObjectId("5ece38ea4f2ec255241b5746")]
+	  }
+    }
+  },
+  { 
+      $unwind: '$demo.secondaryRtgStreamMetrics'
+  }
+  ,
+  {
+  $group: {
+    _id: '$_id',
+    secondary: {
+      $addToSet: '$demo.secondaryRtgStreamMetrics._id'
+    }
+  }
+ },
+ {
+    $project: {
+      'secid': '$secondary'
+    }
+  }
+])
+
+
+
+[
+  Document{
+    {
+      $match=Document{
+        {
+          ratecardId=5ed0ae3dc35e315539a7a984
+        }
+      }
+    }
+  },
+  Document{
+    {
+      $group=Document{
+        {
+          _id=pppValues,
+          channels=Document{
+            {
+              $addToSet=$channelId
+            }
+          },
+          dayParts=Document{
+            {
+              $addToSet=$primaryDayPartId
+            }
+          },
+          commercialTypes=Document{
+            {
+              $addToSet=$commercialTypeId
+            }
+          },
+          periods=Document{
+            {
+              $addToSet=$periodId
+            }
+          }
+        }
+      }
+    }
+  }
+]
+
+
+
+
+db.getCollection('productPrices').aggregate([
+  {
+    $match: {
+      ratecardId:"5ed0ae3dc35e315539a7a984",
+      status:{$ne:"DELETED"}  
+	
+    }
+  },
+  {
+    $unwind: '$demo.secondaryRtgStreamMetrics'
+  },
+  {
+    $group: {
+      _id: 'pppValues',
+      secondary: {
+
+        $addToSet: '$demo.secondaryRtgStreamMetrics._id'
+
+      },
+      channels:{
+
+          $addToSet:'$channelId'
+
+      },
+      dayParts:{
+
+          $addToSet:'$primaryDayPartId'
+ 
+      },
+      commercialTypes:{
+ 
+          $addToSet:'$commercialTypeId'
+
+      },
+      periods:{
+
+          $addToSet:'$periodId'
+
+      },
+	  primary: {
+
+        $addToSet: '$demo.primaryRtgStreamMetrics._id'
+
+      }
+    }
+  }
+])
+
+
+db.getCollection('productPrices').find({ratecardId:"5efb3e45c35e3135ff1ee889",
+    "status":{$nin:['DELETED']},"demo.demoId":"57"})
+	
+	
+	
+	
+	
+	
+db.getCollection('productPrices').aggregate([
+  {
+    $match: {
+      ratecardId:"5f48bae2c35e31622aeef2ee",
+      status:{$ne:"DELETED"}  
+	
+    }
+  },
+   {
+      $group: {
+        _id:{periodId:'$periodId',productId:'$productId',channelId:'$channelId',commercialTypeId:'$commercialTypeId'},
+        data:{$first:'$$ROOT'}
+      }
+    }
+  ])
+  
+  
+  
+  
+  
+  
+   Map<String, ProductPeriodPrice> map= new HashMap<>();
+
+  ObjectMapper objectMapper = new ObjectMapper();
+  
+    List<? extends Bson> pipeline =
+        Arrays
+            .asList(
+                new Document().append(DBConstants.MATCH,
+                    new Document().append(DBConstants.RATECARD_ID, ratecardId)
+                        .append(DBConstants.STATUS,
+                            new Document().append(DBConstants.NOT_EQUAL,
+                                RatecardStatus.DELETED.toString()))),
+                new Document().append(DBConstants.GROUP,
+                    new Document()
+                        .append(DBConstants.MONGO_ID,
+                            new Document().append(DBConstants.CHANNELS, DBConstants.DB_CHANNEL_ID)
+                                .append(DBConstants.PRODUCT_ID, DBConstants.DB_PRODUCT_ID)
+                                .append(DBConstants.COMM_TYPES, DBConstants.DB_COMM_TYPE_ID)
+                                .append(DBConstants.PERIODS, DBConstants.DB_PERIOD_ID))
+                        .append("data", new Document().append("$first", "$$ROOT"))));
+      
+    AggregateIterable<Document> dbResult = mongoMultiTenantConfig.getMongoTemplate()
+        .getCollection("productPrices").aggregate(pipeline, Document.class);
+    
+    try {
+      objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+      MongoCursor<Document> mongoCursor = dbResult.iterator();
+      while (mongoCursor.hasNext()) {
+        logger.info(mongoCursor.next() + "");
+        obj = objectMapper.readValue(objectMapper.writeValueAsString(mongoCursor.next()), Map.class);
+      }
+    } catch (Exception e) {
+      throw new RatecardException(HttpStatus.BAD_REQUEST, "Check the input request");
+    }
+  
+//    Criteria matchCriteria = new Criteria();
+//    matchCriteria.andOperator(Criteria.where("ratecardId").is(ratecardId),
+//        Criteria.where(DBConstants.STATUS).ne(RatecardStatus.DELETED.toString()));
+//    final MatchOperation match = Aggregation.match(Criteria.where("ratecardId").is(ratecardId));
+//
+//    GroupOperation group = Aggregation.group("productId","periodId","channelId","commercialTypeId");
+//    
+//
+//    Aggregation aggregation = Aggregation.newAggregation(match);
+//    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+//
+//
+//    try {
+//      AggregationResults<Document> response = mongoMultiTenantConfig.getMongoTemplate()
+//          .aggregate(aggregation, RatecardConstant.DOCUMENT_NAME_PRODUCTPRICES, Document.class);
+//      Iterator<Document> it = response.iterator();
+//      while (it.hasNext()) {
+//        Document document = it.next();
+//        logger.info(document + "");
+//      }
+//    } catch (Exception e) {
+//      logger.error(e.getMessage());
+//    }
+
+
+
+
+db.getCollection('productPrices').aggregate([
+  {
+    $match: {
+      ratecardId:"5f48bae2c35e31622aeef2ee",
+      status:{$ne:"DELETED"}  
+	
+    }
+  },
+   {
+      $group: {
+        _id:{periodId:'$periodId',productId:'$productId',channelId:'$channelId',commercialTypeId:'$commercialTypeId'},
+        data:{$first:'$_id'}
+      }
+    }
+  ])
+  
+  
+  
+  
+  db.getCollection('productPrices').aggregate([
+    { $match: {
+         ratecardId: "5f4d0ad96844d91fa8f62809"
+        }
+    },
+    { $group: {
+    _id: { periodId: "$periodId", productId: "$productId", channelId: "$channelId", commercialTypeId: "$commercialTypeId" },
+    uniqueIds: { $addToSet: "$_id" },
+    count: { $sum: 1 }
+    }
+  },
+  
+    {$match: {
+        count: {"$gt": 1}
+        }
+    },
+]);
+
+
+
+db.getCollection('version_productPrices').aggregate([
+{"$match": { "ratecardId" : "60b8596a820dc63364408123",
+    $and: [
+     {"demo.secondaryRtgStreamMetrics._id" : {$exists : true }}
+    ,{"demo.secondaryRtgStreamMetrics.metrics.(000)s" : {$exists : true }}
+    ,{"demo.primaryRtgStreamMetrics.metrics.(000)s" : {$exists : true }}
+    ,{ "demo.secondaryRtgStreamMetrics.metrics.FACTOR_000s.editableMetricValue":
+        {$exists : true } }
+        ]}
+    }
+,      
+{$group: {_id :
+    {ratecardId : '$ratecardId', periodId : '$periodId',productId:'$productId' ,
+        channelId : '$channelId', commercialTypeId : '$commercialTypeId',demoId:'demo.demoId'
+        }
+       }
+    }
+{$project : {
+    $count: "totalCount"
+    
+    }}
+])
+
+
+{"$match": { "ratecardId" : "5ff4605f1a01e86b91d3ae11",
+
+
+
+
+
+
+
+db.getCollection('productPrices').aggregate([
+  {
+    "$match": {
+      "ratecardId": "61fa977d4c935831004ed831",
+      "periodName": {
+        "$in": [
+          "PB5",
+          "PB6",
+          "PB7",
+          "PB8"
+        ]
+      }
+    }
+  },
+  {
+    $group: {
+      _id: {
+        periodId: '$periodId',
+        productId: '$productId',
+        channelId: '$channelId',
+        commercialTypeId: '$commercialTypeId',
+        demoId: 'demo.demoId'
+      },
+      uniqueIds: {
+        $addToSet: "_id"
+      },
+      count: {
+        $sum: 1
+      }
+    }
+  }
+])
+
+
+	
