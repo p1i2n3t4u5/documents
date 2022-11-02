@@ -1,0 +1,22 @@
+1)Amazon Relational Database Service (Amazon RDS) is a managed service that makes it easy to set up, operate, and scale a relational database in the cloud.
+supported database MySQL, MariaDB, Oracle, SQL Server, or PostgreSQL database.
+
+2)Amazon RDS manages the work involved in setting up a relational database from provisioning the infrastructure capacity you request to installing the database software. Once your database is up and running, Amazon RDS automates common administrative tasks, such as performing backups and patching the software that powers your database. With optional Multi-AZ deployments, Amazon RDS also manages synchronous data replication across Availability Zones with automatic failover.
+
+3)you can run Amazon RDS on premises using Amazon RDS on Outposts.
+
+customers are allowed to have up to a total of 40 Amazon RDS DB instances. Of those 40, 
+up to 10 can be Oracle or SQL Server DB instances under the "License Included" model.
+ All 40 can be used for Amazon Aurora, MySQL, MariaDB, PostgreSQL, and Oracle under the "BYOL" model.
+ Note that RDS for SQL Server has a limit of up to 100 databases on a single DB instance
+ 
+RDS for Amazon Aurora: No limit imposed by software
+RDS for MySQL: No limit imposed by software
+RDS for MariaDB: No limit imposed by software
+RDS for Oracle: 1 database per instance; no limit on number of schemas per database imposed by software
+RDS for SQL Server: Up to 100 databases per instance see here: Amazon RDS for SQL Server User Guide
+RDS for PostgreSQL: No limit imposed by software
+
+
+RDS maintenance window is your opportunity to control when DB instance modifications, database engine version upgrades, and software patching occurs, in the event they are requested or required. If a maintenance event is scheduled for a given week, it will be initiated during the maintenance window you identify.
+
