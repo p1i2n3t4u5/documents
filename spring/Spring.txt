@@ -1,0 +1,39 @@
+Circular dependency in spring
+A->B->
+Solution:
+1)Setter injection dependency
+2)Use @Lazy with costructor
+3)@Postconstruct  
+4)implements Applicationcontextaware and intializing bean
+ 
+ 
+@Autowire
+constructor injection, setter method injection, and property injection
+we can use constructor based dependency injection for mandatory dependencies and setter based injection for optional dependencies.
+Constructor injection is used when the class cannot function without the dependent class.
+ 
+Property injection is used when the class can function without the dependent class.
+ 
+Field Injection uses reflection to set the values of private variables
+Constructor Injection happens at the time of creating the object itself
+Setter Injection uses setters to set the value
+ 
+Spring scopes: @Scope("prototype")
+singleton default :only one
+prototype: for every ask new
+Web:
+request: for every request
+session
+application
+websocket
+The request scope creates a bean instance for a single HTTP request, while the session scope creates a bean instance for an HTTP Session.
+The application scope creates the bean instance for the lifecycle of a ServletContext,
+and the websocket scope creates it for a particular WebSocket session.
+ 
+@inject and @resource is from JSR 250
+
+ApplicationContext is superset of BeanFactory
+
+
+
+
