@@ -166,6 +166,14 @@ VALUES (1, "Kumar", "C#","C#",2010);
 
 select * from history
 
+--Yes, Views automatically update in MySQL; including, but not limited to:
+
+--1)Changing table structures
+--Insert/Update/Delete procedures on Tables
+--Changing View structures using CREATE OR REPLACE VIEW
+--NOTE: Changing a table's structure requires re-creating the View.
+
+
 drop table t;
 mysql> CREATE TABLE t (qty INT, price INT);
 mysql> INSERT INTO t VALUES(3, 50), (5, 60);
@@ -222,7 +230,7 @@ truncate summery;  -- drops table and recreates
 
 START TRANSACTION;      
 SELECT @A:=SUM(salary) FROM salary_tbl WHERE trans_year=2003;
-Insert into summery (trans_year,salary_sum) values (@A ,2003); 
+Insert into summery (trans_year,salary_sum) values ( 2003,@A); 
 COMMIT;
 ROLLBACK;
 select * from summery;
@@ -268,7 +276,7 @@ where e1.salary < (select max(salary)
                  )
 group by e1.deptno;
 
-
+-- get employees with second highest salary dipartment wise (if two or more emp has same second highest)
 select e3.* from employee e3 join
 (select e1.deptno, max(e1.salary) as maxs
 from  employee e1
@@ -322,6 +330,8 @@ select e.* from EMPLOYEES e inner join EMPLOYEES ee on e.MGR =ee.EmpID  and  ee.
 -- These window function are used with Over () clause   
 -- Inside over clause we have to use order by   at least with one column.
 -- Partition by clause is optional inside Over () clause  
+-- RANK() gives you the ranking within your ordered partition. Ties are assigned the same rank, with the next ranking(s) skipped. So, if you have 3 items at rank 2, the next rank listed would be ranked 5.
+--DENSE_RANK() again gives you the ranking within your ordered partition, but the ranks are consecutive. No ranks are skipped if there are ranks with multiple items.
 
 SELECT EmpID,Ename,Job,Salary, 
     RANK() OVER(ORDER BY Salary desc) AS rnk,
@@ -330,7 +340,7 @@ SELECT EmpID,Ename,Job,Salary,
      FROM  EMPLOYEES
  
  SELECT EmpID,Ename,Job,Salary,rnk FROM (
-       vSELECT EmpID,Ename,Job,Salary, 
+       SELECT EmpID,Ename,Job,Salary, 
           RANK() OVER(ORDER BY Salary desc) AS rnk,
 	      DENSE_RANK() OVER(ORDER BY Salary desc) AS dense_rnk,
           ROW_NUMBER() OVER(ORDER BY Salary desc) AS row_num
@@ -511,7 +521,7 @@ SELECT ALL e.*
                                     
                                     
 --  Second Maximum Salary in MySQL using LIMIT                                   
- SELECT Salary FROM (SELECT e.Salary FROM Employee e ORDER BY e.salary DESC LIMIT 3) AS Emp 
+ SELECT Salary FROM (SELECT e.Salary FROM Employee e ORDER BY e.salary DESC LIMIT 2) AS Emp 
  ORDER BY salary ASC LIMIT 1  
  
 --  Second Highest Salary using SQL Server Top Keyword
@@ -520,5 +530,14 @@ SELECT ALL e.*
  
  
  select e.deptno,AVG(e.salary) as av from employee e group by e.deptno having av > 1000
+ 
+ 
+-- PARTITION BY Example:
+--PARTITION BY allows us to divide the result set into separate partitions based on a specific column, enabling us to perform operations within --each partition. Below is an example that groups employees by the Department column and calculates the number of employees and the total salary within --each partition:
+
+SELECT EmployeeID, EmployeeName, Department, Salary,
+       COUNT(*) OVER (PARTITION BY Department) AS EmployeeCount,
+       SUM(Salary) OVER (PARTITION BY Department) AS DepartmentSalary
+FROM Employees;
                                     
 

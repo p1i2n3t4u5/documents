@@ -1,0 +1,274 @@
+LinkedList Reversal
+----------------------------
+
+[A,101]100   [B,102]101   [C,null]102
+
+current = head 
+prvious = null
+next = null
+
+while(current != null){
+    next =  current.next;
+	curret.next = previous;
+	previous = current 
+	current = next;
+}
+
+
+
+beginning 
+end 
+middle 
+
+Search Recursive
+-----------------------------
+
+ public boolean search(Node head, int x)
+    {
+        // Base case
+        if (head == null)
+            return false;
+ 
+        // If key is present in current node,
+        // return true
+        if (head.data == x)
+            return true;
+ 
+        // Recur for remaining list
+        return search(head.next, x);
+    }
+	
+Iterative Approch
+--------------------
+  public boolean search(Node head, int x)
+    {
+        Node current = head; // Initialize current
+        while (current != null) {
+            if (current.data == x)
+                return true; // data found
+            current = current.next;
+        }
+        return false; // data not found
+    }
+	
+Length of LinkedList
+----------------------
+
+ public int getCount()
+    {
+        Node temp = head;
+        int count = 0;
+        while (temp != null) {
+            count++;
+            temp = temp.next;
+        }
+        return count;
+    }
+	
+Delete Node at specific Position 4
+----------------------------------
+
+counter = 0;
+current = head
+while(counter <postion)	{
+prev = current
+current = current.next
+counter++;
+}
+prev.next = current.next;
+
+
+Find Middle of LinkedList
+-------------------------------------
+    static int getMiddle(Node head)
+    {
+        // Initialize the slow and fast pointer to the head
+        // of the linked list
+        Node slow_ptr = head;
+        Node fast_ptr = head;
+
+        while (fast_ptr != null && fast_ptr.next != null) {
+            // Move the fast pointer by two nodes
+            fast_ptr = fast_ptr.next.next;
+            // Move the slow pointer by one node
+            slow_ptr = slow_ptr.next;
+        }
+        return slow_ptr.data;
+    }
+	
+	
+	Odd no of node = fast_ptr.next != null will be false
+    Even no of nodes = fast_ptr != null will be false 
+
+
+Find Middle of LinkedList
+-----------------------------
+ static int getMiddle(Node head)
+    {
+        Node mid = head;
+        int counter = 1;
+        // Traverse over the entire linked list
+        while (head != null) {
+            // If counter is even, move the mid pointer to
+            // the next node
+            if (counter % 2 == 0) {
+                mid = mid.next;
+            }
+            head = head.next;
+            // Increment the counter for each node
+            counter++;
+        }
+        return mid.data;
+    }
+	
+Check Circular
+--------------
+
+ static boolean isCircular(Node head) 
+    { 
+        // An empty linked list is circular 
+        if (head == null) 
+            return true; 
+  
+        // Next of head 
+        Node node = head.next; 
+  
+        // This loop would stop in both cases (1) If 
+        // Circular (2) Not circular 
+        while (node != null && node != head) 
+            node = node.next; 
+  
+        // If loop stopped because of circular 
+        // condition 
+        return (node == head); 
+    } 
+    } 
+	
+In circular Linked List 
+-------------------------
+
+ // Function to exchange
+    // first and last node
+    static Node exchangeNodes(Node head)
+    {
+ 
+        // If list is of length 2
+        if (head.next.next == head) {
+            head = head.next;
+            return head;
+        }
+        // Find pointer to previous
+        // of last node
+        Node p = head;
+        while (p.next.next != head)
+            p = p.next;
+ 
+        // Exchange first and last
+        // nodes using head and p
+        p.next.next = head.next;
+        head.next = p.next;
+        p.next = head;
+        head = head.next;
+ 
+        return head;
+    }
+	
+
+Print Single LinkedList in reverse Order
+-----------------------------------------
+
+public class ReversePrint {
+    static void printReverse(Node head) {
+        if (head == null)
+            return;
+ 
+        printReverse(head.next);
+ 
+        System.out.print(head.data + " ");
+    }
+
+
+Reverse DoublyLinkedList
+---------------------------------
+ /* Function to reverse a Doubly Linked List */
+    void reverse()
+    {
+        Node temp = null;
+        Node current = head;
+ 
+        /* swap next and prev for all nodes of
+         doubly linked list */
+        while (current != null) {
+            temp = current.prev;
+            current.prev = current.next;
+            current.next = temp;
+            current = current.prev;
+        }
+ 
+        /* Before changing head, check for the cases like
+         empty list and list with only one node */
+        if (temp != null) {
+            head = temp.prev;
+        }
+    }
+	
+Remove duplicate Single LinkedList
+--------------------------------------
+
+   void removeDuplicates()
+    {
+        /*Another reference to head*/
+        Node curr = head;
+
+        /* Traverse list till the last node */
+        while (curr != null) {
+            Node temp = curr;
+            /*Compare current node with the next node and
+            keep on deleting them until it matches the
+            current node data */
+            while (temp != null && temp.data == curr.data) {
+                temp = temp.next;
+            }
+            /*Set current node next to the next different
+            element denoted by temp*/
+            curr.next = temp;
+            curr = curr.next;
+        }
+    }
+	
+	
+ static Node removeDuplicates(Node head)
+ ---------------------------------------
+    {
+        /* Pointer to store the pointer
+        of a node to be deleted*/
+        Node to_free;
+
+        /* do nothing if the list is empty */
+        if (head == null)
+            return null;
+
+        /* Traverse the list till last node */
+        if (head.next != null) {
+
+            /* Compare head node with next node */
+            if (head.data == head.next.data) {
+                /* The sequence of steps is important.
+                to_free pointer stores the next of head
+                pointer which is to be deleted.*/
+                to_free = head.next;
+                head.next = head.next.next;
+                removeDuplicates(head);
+            }
+
+            /* This is tricky: only advance if no deletion
+             */
+            else {
+                removeDuplicates(head.next);
+            }
+        }
+        return head;
+    }
+
+	
+

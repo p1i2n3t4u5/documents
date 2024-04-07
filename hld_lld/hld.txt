@@ -1,0 +1,22 @@
+1. WebSockets
+2. Polling (short polling, long polling)
+3. Polling vs web sockets
+4. Server Side events (SSE)
+5. HTTPs, HTTP (Get put post..)
+6. REST vs GraphQL
+7. Message Queues (pub - sub pattern)
+8. Proxy (Forward / Reverse proxy)
+9. Load balancing (Reverse Proxies)
+10. Horizontal and vertical scaling
+11. Latency and throughput
+12. CAP Theorem
+13. Consistent hasing
+14. NoSQL / SQL (ACID)
+15. Storage (BLOB, Graph based storage)
+16. Indexing
+17 Replication & sharding
+18. Caching ( hit/miss | LRU | LFU )
+19. Resiliency, Availability, Replication
+20. Paging & filtering
+21. Rate limiting
+22. Logging & Monitoring
