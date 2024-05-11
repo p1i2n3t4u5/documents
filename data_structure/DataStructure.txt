@@ -236,9 +236,10 @@ Remove duplicate Single LinkedList
         }
     }
 	
+Remove duplicate Sorted Single LinkedList
+-----------------------------------------	
 	
  static Node removeDuplicates(Node head)
- ---------------------------------------
     {
         /* Pointer to store the pointer
         of a node to be deleted*/
@@ -268,6 +269,284 @@ Remove duplicate Single LinkedList
             }
         }
         return head;
+    }
+	
+Split circular LinkedList
+-------------------------
+
+/* Function to split a list (starting with head) into
+     two lists. head1_ref and head2_ref are references to
+     head nodes of the two resultant linked lists */
+    void splitList()
+    {
+        Node slow_ptr = head;
+        Node fast_ptr = head;
+ 
+        if (head == null) {
+            return;
+        }
+ 
+        /* If there are odd nodes in the circular list then
+         fast_ptr->next becomes head and for even nodes
+         fast_ptr->next->next becomes head */
+        while (fast_ptr.next != head
+               && fast_ptr.next.next != head) {
+            fast_ptr = fast_ptr.next.next;
+            slow_ptr = slow_ptr.next;
+        }
+ 
+        /* If there are even elements in list then move
+         * fast_ptr */
+        if (fast_ptr.next.next == head) {
+            fast_ptr = fast_ptr.next;
+        }
+ 
+        /* Set the head pointer of first half */
+        head1 = head;
+ 
+        /* Set the head pointer of second half */
+        if (head.next != head) {
+            head2 = slow_ptr.next;
+        }
+        /* Make second half circular */
+        fast_ptr.next = slow_ptr.next;
+ 
+        /* Make first half circular */
+        slow_ptr.next = head;
+    }
+	
+
+Find pair for sorted Doubly LinkedList 
+-----------------------------------------
+
+ // Function to find pair whose 
+    // sum equal to given value x. 
+    static void pairSum(Node head, int x) 
+    { 
+        // Set two pointers, first 
+        // to the beginning of DLL 
+        // and second to the end of DLL. 
+        Node first = head; 
+        Node second = head; 
+        while (second.next != null) 
+            second = second.next; 
+  
+        // To track if we find a pair or not 
+        boolean found = false; 
+  
+        // The loop terminates when 
+        // they cross each other (second.next 
+        // == first), or they become same 
+        // (first == second) 
+        while (first != second && second.next != first) { 
+            // pair found 
+            if ((first.data + second.data) == x) { 
+                found = true; 
+                System.out.println("(" + first.data + ", "
+                                   + second.data + ")"); 
+  
+                // move first in forward direction 
+                first = first.next; 
+  
+                // move second in backward direction 
+                second = second.prev; 
+            } 
+            else { 
+                if ((first.data + second.data) < x) 
+                    first = first.next; 
+                else
+                    second = second.prev; 
+            } 
+        } 
+  
+        // if pair is not present 
+        if (found == false) 
+            System.out.println("No pair found"); 
+    } 
+	
+Remove Duplicates form unsorted DoublyLinkedList
+------------------------------------------------
+
+// function to remove duplicates from
+// an unsorted doubly linked list
+static Node removeDuplicates(Node head_ref)
+{
+    // if DLL is empty or if it contains only
+    // a single node
+    if ((head_ref) == null || 
+        (head_ref).next == null)
+        return head_ref;;
+ 
+    Node ptr1, ptr2;
+ 
+    // pick elements one by one
+    for (ptr1 = head_ref; 
+         ptr1 != null; ptr1 = ptr1.next) 
+    {
+        ptr2 = ptr1.next;
+ 
+        // Compare the picked element with the
+        // rest of the elements
+        while (ptr2 != null)
+        {
+ 
+            // if duplicate, then delete it
+            if (ptr1.data == ptr2.data)
+            {
+ 
+                // store pointer to the node next to 'ptr2'
+                Node next = ptr2.next;
+ 
+                // delete node pointed to by 'ptr2'
+                head_ref = deleteNode(head_ref, ptr2);
+ 
+                // update 'ptr2'
+                ptr2 = next;
+            }
+ 
+            // else simply move to the next node
+            else
+                ptr2 = ptr2.next;
+        }
+    }
+    return head_ref;
+}
+
+
+Intersection node of two single linkedList
+--------------------------------------------
+
+ /* function to get the intersection point of two linked
+    lists head1 and head2 */
+    public Node getIntersectionNode(Node head1, Node head2)
+    {
+        while (head2 != null) {
+            Node temp = head1;
+            while (temp != null) {
+                // if both Nodes are same
+                if (temp == head2) {
+                    return head2;
+                }
+                temp = temp.next;
+            }
+            head2 = head2.next;
+        }
+        // If intersection is not present between the lists,
+        // return NULL.
+        return null;
+    }
+	
+	
+
+
+Check if a Singly Linked List is Palindrome using Stack:
+---------------------------------------------------------
+
+  static boolean isPalindrome(Node head)
+    {
+
+        Node slow = head;
+        boolean ispalin = true;
+        Stack<Integer> stack = new Stack<Integer>();
+
+        while (slow != null) {
+            stack.push(slow.data);
+            slow = slow.ptr;
+        }
+
+        while (head != null) {
+
+            int i = stack.pop();
+            if (head.data == i) {
+                ispalin = true;
+            }
+            else {
+                ispalin = false;
+                break;
+            }
+            head = head.ptr;
+        }
+        return ispalin;
+    }
+}
+
+Time complexity: O(N), Iterating over the linked list of size N.
+Auxiliary Space: O(N), Using an auxiliary stack
+
+
+
+
+  boolean isPalindrome(Node head)
+    {
+        slow_ptr = head;
+        fast_ptr = head;
+        Node prev_of_slow_ptr = head;
+        Node midnode = null; // To handle odd size list
+        boolean res = true; // initialize result
+
+        if (head != null && head.next != null) {
+            /* Get the middle of the list. Move slow_ptr by
+               1 and fast_ptr by 2, slow_ptr will have the
+               middle node */
+            while (fast_ptr != null
+                   && fast_ptr.next != null) {
+                fast_ptr = fast_ptr.next.next;
+
+                /*We need previous of the slow_ptr for
+                  linked lists  with odd elements */
+                prev_of_slow_ptr = slow_ptr;
+                slow_ptr = slow_ptr.next;
+            }
+
+            /* fast_ptr would become NULL when there are
+               even elements in the list and not NULL for
+               odd elements. We need to skip the middle node
+               for odd case and store it somewhere so that
+               we can restore the original list */
+            if (fast_ptr != null) {
+                midnode = slow_ptr;
+                slow_ptr = slow_ptr.next;
+            }
+
+            // Now reverse the second half and compare it
+            // with first half
+            second_half = slow_ptr;
+            prev_of_slow_ptr.next
+                = null; // NULL terminate first half
+            reverse(); // Reverse the second half
+            res = compareLists(head,
+                               second_half); // compare
+
+            /* Construct the original list back */
+            reverse(); // Reverse the second half again
+
+            if (midnode != null) {
+                // If there was a mid node (odd size case)
+                // which was not part of either first half
+                // or second half.
+                prev_of_slow_ptr.next = midnode;
+                midnode.next = second_half;
+            }
+            else
+                prev_of_slow_ptr.next = second_half;
+        }
+        return res;
+    }
+
+    /* Function to reverse the linked list  Note that this
+       function may change the head */
+    void reverse()
+    {
+        Node prev = null;
+        Node current = second_half;
+        Node next;
+        while (current != null) {
+            next = current.next;
+            current.next = prev;
+            prev = current;
+            current = next;
+        }
+        second_half = prev;
     }
 
 	
