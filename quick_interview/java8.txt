@@ -1,0 +1,122 @@
+Java 8 introduced a significant memory management upgrade related to the Permanent Generation (PermGen) space:
+1. Removal of PermGen and Introduction of Metaspace:
+PermGen:
+----------
+This memory space used to store class metadata, such as class definitions, method information, and string pool. However, it had a fixed size, leading to the infamous OutOfMemoryError: PermGen space.
+
+Metaspace:
+---------------
+Java 8 replaced PermGen with Metaspace, which resides in native memory (outside the heap) and dynamically resizes by default. This change significantly reduces the occurrence of OutOfMemoryError related to class metadata.
+Key benefits of this change:
+-------------------------------
+Dynamic resizing:
+-------------------
+Metaspace automatically grows or shrinks based on the application's needs, eliminating the need for manual tuning of PermGen size.
+Improved garbage collection:
+Metaspace is garbage collected along with the rest of the heap, potentially reducing fragmentation and improving GC performance.
+
+Controlling Metaspace:
+-------------------------
+Although Metaspace is self-tuning, you can still control its behavior using JVM options:
+-XX:MetaspaceSize: Sets the initial size of Metaspace.
+-XX:MaxMetaspaceSize: Sets the maximum size of Metaspace.
+Overall, the introduction of Metaspace in Java 8 was a significant improvement to memory management, offering greater flexibility and reducing the likelihood of PermGen related errors.
+
+
+Java 8 introduced a significant performance improvement for HashMaps, particularly in scenarios with many hash collisions. Here are the key changes:
+1. TreeNodes instead of LinkedLists:
+----------------------------------------
+Previously, when multiple keys hashed to the same bucket, the bucket would store the entries in a linked list. This meant that in the worst-case scenario (many collisions), searching for an element in the bucket would have O(n) time complexity.
+In Java 8, when the number of entries in a bucket exceeds a certain threshold (TREEIFY_THRESHOLD = 8), the bucket's internal structure is transformed from a linked list to a balanced red-black tree. This reduces the worst-case search complexity to O(log n), significantly improving performance for large HashMaps with many collisions.
+2. Other improvements:
+------------------------------
+Performance tuning:
+--------------------
+Several optimizations were made to the internal implementation of HashMap, improving overall performance even in cases without collisions.
+Removal of alternative String hash function:
+The alternative String hash function introduced in Java 7u6 was removed in Java 8. This change might affect iteration order in some cases.
+How to benefit from these changes:
+If you are using Java 7 or earlier, upgrading to Java 8 can provide an automatic performance boost for HashMaps, especially if you have large maps with many collisions.
+No code changes are required to take advantage of these improvements, as they are implemented internally within the HashMap class.
+In summary, Java 8 brought significant improvements to the performance of HashMaps, particularly in scenarios with many hash collisions. This was achieved by using red-black trees instead of linked lists for buckets exceeding a certain size threshold.
+
+
+
+1)How many male and female employees are there in the organization?
+----------------------------------------------------------------------
+Map<String, Long> noOfMaleAndFemaleEmployees=
+employeeList.stream().collect(Collectors.groupingBy(Employee::getGender, Collectors.counting()));
+System.out.println(noOfMaleAndFemaleEmployees);
+
+2) Print the name of all departments in the organization?
+-----------------------------------------------------------------------
+ employeeList.stream()
+            .map(Employee::getDepartment)
+            .distinct()
+            .forEach(System.out::println);
+			
+3)What is the average age of male and female employees?
+---------------------------------------------------------------------
+Map<String, Double> avgAgeOfMaleAndFemaleEmployees=
+employeeList.stream().collect(Collectors.groupingBy(Employee::getGender, Collectors.averagingInt(Employee::getAge)));
+         
+System.out.println(avgAgeOfMaleAndFemaleEmployees);
+
+4)Get the details of highest paid employee in the organization?
+---------------------------------------------------------------------
+Optional<Employee> highestPaidEmployeeWrapper=
+employeeList.stream().collect(Collectors.maxBy(Comparator.comparingDouble(Employee::getSalary)));
+
+5)Get the names of all employees who have joined after 2015?
+---------------------------------------------------------------------
+employeeList.stream()
+            .filter(e -> e.getYearOfJoining() > 2015)
+            .map(Employee::getName)
+            .forEach(System.out::println);
+			
+			
+6)Count the number of employees in each department?
+---------------------------------------------------------
+Map<String, Long> employeeCountByDepartment=
+employeeList.stream().collect(Collectors.groupingBy(Employee::getDepartment, Collectors.counting()));
+         
+Set<Entry<String, Long>> entrySet = employeeCountByDepartment.entrySet();
+         
+for (Entry<String, Long> entry : entrySet)
+{
+    System.out.println(entry.getKey()+" : "+entry.getValue());
+}
+			
+7) What is the average salary of each department?
+-----------------------------------------------------------------			
+Map<String, Double> avgSalaryOfDepartments=
+employeeList.stream().collect(Collectors.groupingBy(Employee::getDepartment, Collectors.averagingDouble(Employee::getSalary)));
+         
+Set<Entry<String, Double>> entrySet = avgSalaryOfDepartments.entrySet();
+         
+for (Entry<String, Double> entry : entrySet) 
+{
+    System.out.println(entry.getKey()+" : "+entry.getValue());
+}		
+
+8)Get the details of youngest male employee in the product development department?
+-------------------------------------------------------------------------------------
+
+Optional<Employee> youngestMaleEmployeeInProductDevelopmentWrapper=
+employeeList.stream()
+            .filter(e -> e.getGender()=="Male" && e.getDepartment()=="Product Development")
+            .min(Comparator.comparingInt(Employee::getAge));
+         
+Employee youngestMaleEmployeeInProductDevelopment = youngestMaleEmployeeInProductDevelopmentWrapper.get();
+
+9)Who has the most working experience in the organization?
+------------------------------------------------------------------
+Optional<Employee> seniorMostEmployeeWrapper=
+employeeList.stream().sorted(Comparator.comparingInt(Employee::getYearOfJoining)).findFirst();
+         
+Employee seniorMostEmployee = seniorMostEmployeeWrapper.get();
+
+-----------------------------------------------------------------------
+10) what is completableFuture ?
+
+

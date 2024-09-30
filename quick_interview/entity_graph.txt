@@ -1,0 +1,211 @@
+
+EntityGraph is present SpringDataJpa dependency
+
+Until JPA 2.0, to load an entity association, we usually used FetchType.LAZY and FetchType.EAGER as fetching strategies. This instructs the JPA provider to additionally fetch the related association or not. Unfortunately, this meta configuration is static and doesn’t allow switching between these two strategies at runtime.
+The main goal of the JPA Entity Graph is then to improve the runtime performance when loading the entity’s related associations and basic fields.
+
+
+What is N+1 issue
+-----------------------
+In Spring Data JPA, the “N+1 problem” refers to a performance issue that can occur when retrieving entities and their associated relationships from a database. It arises when you have a query that fetches a collection of entities, and each entity has a one-to-one or many-to-one relationship with another entity. If you’re not careful, the framework may end up executing additional queries (N+1 queries) to fetch the associated entities, resulting in decreased performance and increased database load.
+
+Let’s understand this problem with an example. Suppose you have two entities, Author and Book, with a one-to-many relationship where an author can have multiple books:
+
+@Entity
+public class Author {
+    @Id
+    private Long id;
+    
+    private String name;
+    
+    // Getters and setters
+}
+
+@Entity
+public class Book {
+    @Id
+    private Long id;
+    
+    private String title;
+    
+    @ManyToOne
+    private Author author;
+    
+    // Getters and setters
+}
+
+Now, let’s say you want to retrieve all books and their corresponding authors. You might write the following query using Spring Data JPA:
+
+@Repository
+public interface BookRepository extends JpaRepository<Book, Long> {
+    @Query("SELECT b FROM Book b")
+    List<Book> findAllBooks();
+}
+If you use this method to fetch all books, Spring Data JPA will generate a single query to retrieve the books. However, when you access the author property of each book, it will trigger a separate query to fetch the associated author. So if you have N books, this will result in N+1 queries being executed—one query to fetch the books and an additional query for each book to fetch its author.
+
+
+How to solve N+1 issue in JPA
+------------------------------------
+
+a) Eager fetching: 
+--------------------
+  You can use the @ManyToOne(fetch = FetchType.EAGER) annotation on the author field in the Book entity. This will fetch the associated author eagerly, i.e., in the same query that fetches the books. However, eager fetching may lead to performance issues if you have large collections or deep object graphs.
+
+b) Join Fetching
+--------------------
+  Lazy fetching: By default, JPA uses lazy fetching for @ManyToOne associations. With lazy fetching, the associated entity is loaded only when you access the getter method for that property. If you are using Spring Data JPA, you can keep the default lazy fetching behavior and use the JOIN FETCH keyword in your query to fetch the associated entities eagerly.
+
+  @Query("SELECT b FROM Book b JOIN FETCH b.author")
+  List<Book> findAllBooks();
+
+//This query instructs JPA to fetch the associated authors eagerly while querying for books, eliminating the N+1 queries problem.
+
+c) Entity Graph
+---------------------
+JPA provides the concept of an entity graph, which allows you to define a graph of entities to load eagerly. You can define an entity graph using annotations or XML metadata. By specifying the entity graph in your query, you can control which relationships should be eagerly fetched. This approach provides more flexibility than eager or lazy fetching at the entity level. 
+
+ (1) Named Entity Graphs:
+ -------------------------
+  Named entity graphs are defined in the entity classes using annotations and can be reused across multiple queries. Here’s an example:
+
+  @Entity
+  @NamedEntityGraph(
+      name = "Book.author",
+      attributeNodes = @NamedAttributeNode("author")
+  )
+  public class Book {
+    // ...
+  }	 
+  
+  In the above example, we define a named entity graph called “Book.author” that specifies the “author” attribute to be eagerly fetched.
+
+   To use the named entity graph in a query, you can either annotate the repository method or use the EntityGraph annotation with the @NamedEntityGraph attribute:
+   
+   @Repository
+   public interface BookRepository extends JpaRepository<Book, Long> {
+     @EntityGraph("Book.author")
+     List<Book> findAll();
+   }
+  Now, when you invoke the findAll() method, the associated author entities will be eagerly fetched.
+  
+  (2)  Dynamic Entity Graphs:
+  ---------------------------
+  Dynamic entity graphs allow you to define the fetch plan programmatically at runtime using the javax.persistence.EntityGraph API. Here's an example:
+  
+  @Repository
+  public interface BookRepository extends JpaRepository<Book, Long> {
+    @Query("SELECT b FROM Book b WHERE b.genre = :genre")
+    List<Book> findByGenre(@Param("genre") String genre, EntityGraph entityGraph);
+  }
+  
+  Dynamic entity graphs allow you to define the fetch plan programmatically at runtime using the javax.persistence.EntityGraph API. Here's an example:
+  In the above example, we pass the EntityGraph object as a parameter to the query method. You can create the EntityGraph instance and specify the attributes to be fetched dynamically based on your requirements.
+  
+  // This will apply 'Product.brand' named EntityGraph to findByLabel
+  productRepository.findByLabel("foo", EntityGraphs.named("Product.brand"));
+
+  // This will apply 'Product.supplier' named EntityGraph to findByLabel
+  productRepository.findByLabel("foo", EntityGraphs.named("Product.supplier"));
+
+  // This will apply 'supplier' attribute paths EntityGraph (don't need to define named EntityGraph) to findByLabel
+  productRepository.findByLabel("foo", EntityGraphUtils.fromAttributePaths("supplier"));
+
+
+ d)DTO projection:
+----------------------------------
+ Another way to avoid the N+1 problem is to use DTO (Data Transfer Object) projections instead of fetching the full entities. By creating a DTO that contains only the necessary information, you can avoid loading unnecessary associations. This approach is particularly useful when you need to fetch a subset of data or when the relationships are complex.
+
+public interface BookProjection {
+    String getTitle();
+    AuthorProjection getAuthor();
+}
+
+public interface AuthorProjection {
+    String getName();
+}
+
+@Repository
+public interface BookRepository extends JpaRepository<Book, Long> {
+    List<BookProjection> findAllProjectedBy();
+}
+n the above example, we define two projection interfaces, BookProjection and AuthorProjection, that specify the required fields. The findAllProjectedBy() method in the repository returns a list of BookProjection instances, which contains only the defined fields.
+
+
+More examples
+-------------------
+
+@Entity
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private String email;
+
+    //...
+}
+
+@Entity
+public class Post {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String subject;
+    @OneToMany(mappedBy = "post")
+    private List<Comment> comments = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn
+    private User user;
+    
+    //...
+}
+
+@Entity
+public class Comment {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String reply;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn
+    private Post post;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn
+    private User user;
+    
+    //...
+}
+
+
+The goal is then to load the following graph using various ways:
+
+Post  ->  user:User
+      ->  comments:List<Comment>
+            comments[0]:Comment -> user:User
+            comments[1]:Comment -> user:User
+			
+
+
+@NamedEntityGraph(
+  name = "post-entity-graph",
+  attributeNodes = {
+    @NamedAttributeNode("subject"),
+    @NamedAttributeNode("user"),
+    @NamedAttributeNode("comments"),
+  }
+)
+@Entity
+public class Post {
+
+    @OneToMany(mappedBy = "post")
+    private List<Comment> comments = new ArrayList<>();
+    
+    //...
+}
+

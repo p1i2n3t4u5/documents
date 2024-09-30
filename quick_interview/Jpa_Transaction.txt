@@ -1,0 +1,204 @@
+Isolation.DEFAULT:
+-------------------
+Uses the default isolation level of your database. This is the most common setting.
+
+Isolation.READ_UNCOMMITTED:
+---------------------------
+The lowest isolation level, allowing dirty reads. Avoid this unless you're absolutely sure you need it.
+
+Isolation.READ_COMMITTED:
+---------------------------
+Prevents dirty reads, ensuring you only read committed data. This is a common choice for many applications.
+
+Isolation.REPEATABLE_READ:
+--------------------------
+Ensures that repeated reads within the same transaction return the same results, even if other transactions modify the data.
+Manages 2 different version of database for managing transaction
+
+Isolation.SERIALIZABLE:
+-----------------------
+The highest isolation level, guaranteeing that transactions are executed in a serializable manner, as if they were executed one
+after the other. Use this for strict data consistency requirements.
+
+
+Best Practices for Using @Transactional in Spring Boot
+-----------------------------------------------------------
+
+
+What is the role of the TransactionManager in Spring Boot’s transaction management?
+-----------------------------------------------------------------------------------------------
+When a method annotated with @Transactional is called, Spring Boot uses the TransactionManager to create a new transaction or join an existing one. The TransactionManager then manages the transaction's lifecycle, including committing or rolling back the transaction based on the success or failure of the transactional operation.
+
+In addition to coordinating transactions across multiple resources, the TransactionManager also supports different transaction isolation levels, which determine how transactions interact with each other and the underlying data. Spring Boot supports several isolation levels, including READ_UNCOMMITTED, READ_COMMITTED, REPEATABLE_READ, and SERIALIZABLE, allowing developers to choose the appropriate level of isolation for their application.
+
+@Service
+public class UserService {
+
+  @Autowired
+  private UserRepository userRepository;
+
+  @Transactional
+  public void updateUser(String username, String email) {
+    User user = userRepository.findByUsername(username);
+    user.setEmail(email);
+    // ... other operations
+  }
+}
+In the above example, the updateUser() method is marked with @Transactional. When the method is called, Spring Boot uses the TransactionManager to create a new transaction or join an existing one.
+
+What is the difference between @Transactional and @Transactional(propagation = Propagation.REQUIRES_NEW)?
+-------------------------------------------------------------------------------------------------------------------
+@Transactional creates a transaction if none exists or joins an existing transaction if one is already active.
+@Transactional(propagation = Propagation.REQUIRES_NEW) creates a new transaction, suspending the current transaction (if one exists).
+@Service
+public class MyService {
+
+    @Transactional
+    public void methodA() {
+        // ... some code here
+        methodB();
+        // ... some code here
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void methodB() {
+        // ... some code here
+    }
+}
+In this example, methodA() is marked with @Transactional and calls methodB(), which is marked with @Transactional(propagation = Propagation.REQUIRES_NEW). When methodA() is invoked, Spring creates a transaction and propagates it to methodB(). However, because methodB() has a REQUIRES_NEW propagation setting, it creates a new transaction, suspending the current transaction in methodA().
+
+What happens if a @Transactional method calls another @Transactional method?
+--------------------------------------------------------------------------------------
+By default, Spring uses a “proxy-based” approach to manage transactions. If a @Transactional method calls another @Transactional method within the same class, the call is made to the original instance (not the proxy) and the transactional behavior is not applied.
+@Service
+public class MyService {
+
+    @Autowired
+    private MyService self;
+
+    @Transactional
+    public void methodA() {
+        // ... some code here
+        self.methodB();
+        // ... some code here
+    }
+
+    @Transactional
+    public void methodB() {
+        // ... some code here
+    }
+}
+In this example, methodA() calls methodB(), both of which are marked with @Transactional. However, because Spring uses a "proxy-based" approach by default, the transactional behavior will not be applied to methodB() when it is called from methodA(). To solve this issue, you can either use AspectJ-based weaving or move the @Transactional method to a separate class.
+
+How does Spring handle transactions when calling a method on a different bean?
+------------------------------------------------------------------------------
+By default, Spring uses a “proxy-based” approach to manage transactions. When calling a method on a different bean, Spring creates a new proxy around the target bean, which allows it to manage the transactional behavior. The behavior of the transaction is determined by the propagation settings of the @Transactional annotation on the calling method.
+@Service
+public class MyService {
+
+    @Autowired
+    private OtherService otherService;
+
+    @Transactional
+    public void methodA() {
+        // ... some code here
+        otherService.methodB();
+        // ... some code here
+    }
+}
+
+@Service
+public class OtherService {
+
+    @Transactional
+    public void methodB() {
+        // ... some code here
+    }
+}    
+In this example, methodA() calls methodB() on a different bean (OtherService). When methodB() is invoked, Spring creates a new proxy around the target bean and applies the transactional behavior based on the propagation settings of the calling method (methodA()).
+
+What happens when a method marked with @Transactional throws an unchecked exception?
+------------------------------------------------------------------------------------
+When a method marked with @Transactional throws an unchecked exception, Spring will automatically roll back the transaction by default. This behavior ensures that the data changes made within the transaction are not persisted to the database if an error occurs.
+
+@Service
+@Transactional
+public class UserService {
+
+  @Autowired
+  private UserRepository userRepository;
+
+  public void updateUser(String username, String email) {
+    User user = userRepository.findByUsername(username);
+    if (user == null) {
+      throw new RuntimeException("User not found");
+    }
+    user.setEmail(email);
+    userRepository.save(user);
+    throw new RuntimeException("Something went wrong");
+  }
+}
+In the above example, the updateUser() method is marked with @Transactional and updates the email address of a user in the database. However, the method also throws an unchecked exception after saving the changes to the database. Because the exception is unchecked, Spring will roll back the transaction and discard the changes made to the user's email address.
+
+If you want to change the default behavior and allow the transaction to commit even if an unchecked exception occurs, you can add the noRollbackFor attribute to the @Transactional annotation:
+
+@Service
+@Transactional(noRollbackFor = RuntimeException.class)
+public class UserService {
+
+  // ...
+}
+In the above example, we’re telling Spring not to roll back the transaction if a RuntimeException occurs. This can be useful in some cases where you want to keep the changes made within the transaction even if an error occurs.
+
+What is the default rollback behavior of a @Transactional method?
+------------------------------------------------------------------------
+By default, a @Transactional method will roll back the transaction on any unchecked exception. You can customize this behavior using the rollbackFor or noRollbackFor properties of the @Transactional annotation.
+@Service
+public class MyService {
+
+    @Transactional(rollbackFor = {Exception.class})
+    public void methodA() throws Exception {
+        // ... some code here
+        throw new Exception("Something went wrong");
+        // ... some code here
+    }
+}
+In this example, methodA() is marked with @Transactional(rollbackFor = {Exception.class}). This means that the transaction will be rolled back if any exception of type Exception (or its subclasses) is thrown. If an exception of a different type is thrown, the transaction will not be rolled back.
+
+Can you use @Transactional on private methods?
+------------------------------------------------------
+No, @Transactional only works on public methods. Spring creates a proxy around the public methods of a bean to manage the transactional behavior. Private methods are not visible to the proxy and therefore cannot be wrapped in a transactional context.
+@Service
+public class MyService {
+
+    @Transactional
+    public void methodA() {
+        // ... some code here
+        methodB();
+        // ... some code here
+    }
+
+    private void methodB() {
+        // ... some code here
+    }
+}
+In this example, methodA() is marked with @Transactional, but methodB() is not. When methodA() is invoked, Spring creates a transaction and propagates it to methodB(). However, because methodB() is not a public method, Spring cannot create a proxy around it to apply the transactional behavior. To solve this issue, you can either make methodB() a public method or move the @Transactional annotation to a different method that calls both methodA() and methodB().
+
+How does the @Transactional annotation handle concurrency issues?
+--------------------------------------------------------------------
+Concurrency issues can occur when multiple threads access the same data simultaneously, leading to inconsistencies and data corruption. Spring Boot’s @Transactional annotation provides a mechanism for handling concurrency issues by serializing transactions that modify the same data, preventing multiple threads from modifying the same data at the same time.
+
+@Service
+public class UserService {
+
+  @Autowired
+  private UserRepository userRepository;
+
+  @Transactional
+  public void updateUser(String username, String email) {
+    User user = userRepository.findByUsername(username);
+    user.setEmail(email);
+    // ... other operations
+  }
+}
+In the above example, the updateUser() method is marked with @Transactional and updates a user's email address in the database. When multiple threads attempt to modify the same user's email address at the same time, Spring will ensure that only one thread can modify the data at any given time by serializing the transactions. This ensures that the data remains consistent and prevents race conditions and other concurrency issues.

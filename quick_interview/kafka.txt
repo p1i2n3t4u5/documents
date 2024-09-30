@@ -1,0 +1,215 @@
+kafka consumers how read from multiple partition
+---------------------------------------------------
+In Apache Kafka, consumers can read from one or more partitions of a topic at a time. The number of partitions each consumer is assigned depends on the number of consumers in the group and the number of partitions available:
+One consumer: If there is only one consumer, it will read from all partitions.
+Multiple consumers in a group: If there are more consumers than partitions, some consumers will be idle. If there are more partitions than consumers, each consumer will be assigned multiple partitions. The default strategy for assigning partitions is called range assignor, which divides the number of partitions by the number of consumers.
+Exclusive consumer: If a consumer group only has one consumer, it's called an exclusive consumer and it subscribes to all partitions of the topic. 
+
+Kafka Partitions and Message Ordering
+--------------------------------------------
+A Kafka topic can be split into multiple partitions, each of which is an ordered, immutable sequence of records. Partitions are distributed across different brokers in the Kafka cluster to ensure load balancing. The key benefits of partitions are scalability and parallelism, as multiple consumers can read from multiple partitions simultaneously.
+
+Message Ordering
+---------------------
+Within a partition, messages are guaranteed to be in the order they were written. However, if a topic has multiple partitions, there is no guarantee of ordering across the entire topic-only within each partition.
+
+Producer Configuration for Message Distribution
+---------------------------------------------------
+When a producer sends a message to a Kafka topic, it can specify a key for the message. The producer uses a partitioner to decide which partition to send the message to. By default, Kafka provides a partitioner that hashes the message key and maps it to a specific partition. If no key is specified, the producer round-robins the messages across all partitions.
+
+Partitioner Configuration
+---------------------------
+Producers can use custom partitioners if specific distribution logic is required. For example, a custom partitioner could ensure that messages with certain attributes always go to the same partition.
+
+Consumer Message Assignment
+------------------------------
+Kafka consumers read messages from the partitions of a topic. Consumers can be grouped together into a consumer group for a topic, and each consumer in the group reads from exclusive partitions of the topic.
+
+Consumer Groups and Partition Assignment
+------------------------------------------
+When multiple consumers are part of a single consumer group, Kafka ensures that each partition is only consumed by one consumer from that group. If there are more consumers than partitions, some consumers will be idle. If there are more partitions than consumers, consumers will be assigned multiple partitions.
+
+
+Partition Assignment Strategies
+---------------------------------
+  a)Range Assignor:
+   ------------------  
+    This strategy assigns partitions on a per-topic basis. It works by dividing the sorted list of partitions by the number of consumers and assigning each consumer a contiguous segment of partitions for each topic.This can lead to an uneven distribution if the number of partitions is not a multiple of the number of consumers.
+  b)Round Robin Assignor:
+   ----------------------
+    This strategy assigns partitions to consumers in a round-robin fashion, regardless of the topic. It ensures a uniform distribution of partitions across consumers, which can be beneficial when the workload is relatively uniform and the processing time for each message is similar.
+  c)Sticky Assignor:
+   --------------------
+    The Sticky Assignor aims to achieve a balanced distribution while also minimizing the movement of partitions between consumers during rebalances.This strategy tries to preserve the existing assignment as much as possible, which can be useful to maintain locality and cache warmth, leading to more efficient processing.
+  d)Cooperative Sticky Assignor:
+   ------------------------------
+    This strategy extends the Sticky Assignor logic by allowing for cooperative rebalancing. Unlike the eager rebalancing strategy where consumers have to stop processing messages during a rebalance, the Cooperative Sticky Assignor allows consumers to continue processing messages for partitions that they retain throughout the rebalance. This can lead to less disruption and more even distribution as the assignment shifts incrementally.
+
+Rebalancing and Consumer Coordination
+----------------------------------------
+Kafka uses a group coordinator and a consumer coordinator to manage the members of a consumer group and their partition assignments. When a consumer joins or leaves a group, or when the partitions of a topic change, a rebalance is triggered. During a rebalance, consumers temporarily stop reading messages and wait until the new partition assignment is received.
+
+
+Configuration Settings for Distribution Management
+---------------------------------------------------
+Kafka provides several configuration settings that control message distribution and consumption:
+
+  a)partition.assignment.strategy:
+      Determines the partition assignment strategy used by the consumer.
+  b)max.poll.records:
+     Controls the maximum number of records a consumer can fetch in a single poll. This is a consumer setting.
+  c)session.timeout.ms: 
+    The timeout used to detect consumer failures. If a consumer doesn't send a heartbeat within this interval, a rebalance will be triggered.
+  d)heartbeat.interval.ms: 
+    Specifies the expected time between heartbeats to the consumer coordinator.
+
+
+Apache Kafka has a few ways to prevent duplicate messages from being processed:
+---------------------------------------------------------------------------------------
+a) Idempotent producer
+----------------------
+Assigns a unique ID to each producer and a sequence number to each message. The broker tracks the combination of producer ID and sequence number for each partition and rejects duplicate write requests. This option is available in the Kafka producer starting with version 0.11.0.0.
+
+b) Consumer group IDs and offset management
+------------------------------------------------
+Ensures that different consumer instances don't conflict by using unique consumer group IDs.
+
+c) Message processing and offset
+----------------------------------
+Ensures that either both message processing and committing message offset are successful, or neither.
+
+d) External data store
+-----------------------------------
+Stores message offset and processing results in an external data store during the same database transaction. 
+
+
+alternative solutions would be:
+----------------------------------
+Produce a message with a unique key into the topic test
+On the consumer side, push an entry with the unique key into DB once processing is done successfully. Before starting the process at consumer id, check the unique key entry in the DB. If exists then the consumer already processed that message else do consume and process.
+
+
+Notes :
+------------
+1) Reading a message doesn't delete the message. 
+2) Multiple consumer can read the same message if they have different group.id(legacy queues generally delete the messages once consumed) 
+3) messages in same partition are ordered but messages accross partion may not be ordered.
+4) ordering message is guaranteed as long as the key is not null .   
+5) one consumer can subscribe to one or more topics .
+6) single instance of consumer consumes all the messages of the subscribed topic(messages from all the partitions)
+7) multiple consumer with same group id will distibute the partitions (rebalancing adding or removing consumer application with same consumer group managed by      group.id prop)
+8) if there are 10 partitions in a topic then it can be distributed accross 10 consumers with same group.id.
+9) if more consumers are present then the available topics then the consumers will remain idle.
+10) there is topic name _consumer_offset which manages offsets for each topic-partition and consumer group so that if one consumer from a specific topic dies other consumer will continue from the same offset.
+11) its the responsibility of the consumer to update the offset info in _consumer_offset topic.
+12) Messages are generally processed in batches (manged my max.poll.records prop) and last offset is committed .
+Instead of commiting last offset consumer can commit offset after processing each message sequentially.
+13) Types of offset commit 
+  a) Autocommit 
+  b) Manual commit
+      1) Sync commit (will block consumer)
+	  2) Async commit 
+14) You are in a situation where you want to listen to Kafka messages from a specific offset. To do that you have to implement the interface named ConsumerSeekAware and seek the position from which you want to read.
+
+KafkaConsumer
+ConsumerRecords -> contains key,value
+
+ex:
+ Properties props = new Properties();
+     props.setProperty("bootstrap.servers", "localhost:9092");
+     props.setProperty("group.id", "test");
+     props.setProperty("enable.auto.commit", "true");
+     props.setProperty("auto.commit.interval.ms", "1000");
+     props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+     props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+     KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+     consumer.subscribe(Arrays.asList("foo", "bar"));
+     while (true) {
+         ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+         for (ConsumerRecord<String, String> record : records)
+             System.out.printf("offset = %d, key = %s, value = %s%n", record.offset(), record.key(), record.value());
+     }
+
+
+Kafka Producer
+--------------------
+When a producer sends messages to a Kafka topic, Kafka organizes these messages into partitions using a specified partitioning strategy. A partition is a fundamental unit that represents a linear, ordered sequence of messages. Once a message is produced, it is assigned to a particular partition based on the chosen partitioning strategy. Subsequently, the message is appended to the end of the log within that partition.
+
+
+
+KafkaProducer  -> initilized with map of configuration parameters ie address of broker ,security config
+ProducerRecord -> key,value pair that is pushed to topic
+kafkaProducers mantains connection pooling 
+Network buffering -> waiting for Broker to acknoledge that Message transmission is successful so that it can free up buffer space
+Retransmittion messages if required 
+
+producer decides which partition it should write the message .
+it can sent key less messages round robin
+it compute destination partition by hashing the key
+custom configuration scheme also can be applied 
+
+
+
+Fault Tolerance and High Availability
+---------------------------------------
+Partitions also contribute to Kafka’s exceptional fault tolerance. Each partition can be replicated across multiple brokers. In the event of a broker failure, the replicated partitions can still be accessed and ensure continuous access to the data.
+The Kafka cluster can seamlessly redirect consumers to healthy brokers, maintaining data availability and high system reliability.
+
+
+Data Affinity
+--------------------
+Data affinity refers to the intentional grouping of related data within the same partition. By sending related data to specific partitions, we ensure that it is processed together, leading to increased processing efficiency.
+For instance, consider a scenario where we might want to ensure a customer’s orders reside in the same partition for order tracking and analytics. Guaranteeing that all orders from a specific customer end up in the same partition simplifies tracking and analysis processes.
+
+Load Balancing
+---------------------
+Additionally, distributing data evenly across partitions can help to ensure optimal resource utilization. Evenly distributing data across partitions helps optimize resource utilization within a Kafka cluster. By sending data to partitions based on load considerations, we can prevent resource bottlenecks and ensure that each partition receives a manageable and balanced workload.
+
+Prioritization
+---------------
+In certain scenarios, not all data has equal priority or urgency. Kafka’s partitioning capabilities enable the prioritization of critical data by directing it to dedicated partitions for expedited handling. This prioritization ensures that high-priority messages receive prompt attention and faster processing compared to less critical ones.
+
+
+Partitioning: Kafka can guarantee ordering only inside the same partition and it is therefore important to be able to route correlated messages into the same partition. To do so you need to specify a key for each message and Kafka will put all messages with the same key in the same partition.
+
+-------------------------------------------------------	 
+ Properties props = new Properties();
+ props.put("bootstrap.servers", "localhost:9092");
+ props.put("acks", "all");
+ props.put("retries", 0);
+ props.put("batch.size", 16384);
+ props.put("linger.ms", 1);
+ props.put("buffer.memory", 33554432);
+ props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+ props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+ Producer<String, String> producer = new KafkaProducer<>(props);
+ for (int i = 0; i < 100; i++)
+     producer.send(new ProducerRecord<String, String>("my-topic", Integer.toString(i), Integer.toString(i)));
+
+ producer.close();
+
+--------------------------------------------------------
+
+
+Methods for Sending to Specific Partitions
+-------------------------------------------
+  a) Sticky Partitioner:
+   ----------------------
+   In Kafka versions 2.4 and above, the sticky partitioner aims to keep messages without keys together in the same partition. 
+   
+  b) Key-based Approach
+  ------------------------
+  In the key-based approach, Kafka directs messages with identical keys to the same partition, optimizing the processing of related data. This is achieved through a hash function, ensuring deterministic mapping of message keys to partitions.In the key-based approach, Kafka directs messages with identical keys to the same partition, optimizing the processing of related data. This is achieved through a hash function, ensuring deterministic mapping of message keys to partitions.
+  
+    kafkaProducer.send("order-topic", "key1", "critical data");
+    kafkaProducer.send("order-topic", "key1", "more critical data");
+    kafkaProducer.send("order-topic", "key2", "another critical message");
+    kafkaProducer.send("order-topic", "key1", "another more critical data");
+	
+	messages with same key will land in same partition
+	
+  c) Custom Partitioning
+   -----------------------
+	For fine-grained control, Kafka allows defining custom partitioners. These classes implement the Partitioner interface, enabling us to write logic based on message content, metadata, or other factors to determine the target partition.
+	

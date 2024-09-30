@@ -1,0 +1,49 @@
+What is GraphQL
+---------------------
+GraphQL is a query language for APIs that helps front-end developers solve data-fetching challenges. It can help with issues like:
+
+here are a number of benefits to using GraphQL with Spring Boot. First, GraphQL can help to improve the performance of Spring Boot applications by reducing the amount of data that is transferred between the client and the server. Second, GraphQL can make it easier to develop Spring Boot applications by providing a more flexible and expressive way to query data.
+
+It allows the client to specify exactly what data it desires, including navigating child resources in a single request and allows for multiple queries in a single request.
+
+a) Bandwidth
+-----------------
+GraphQL allows clients to specify what data they need, so the server doesn't send extra data that can slow down apps on devices with limited bandwidth.
+
+b) Over-fetching and under-fetching
+--------------------------------------
+In traditional REST APIs, clients often receive more or less data than they need. GraphQL allows clients to request only the data they need, which can help speed up development.
+
+c) N+1 issue
+-------------------
+The N+1 issue is a performance problem that can occur when using JPA . It happens when a query needs to fetch related data from multiple tables in the database, and JPA issues a separate query for each table. This can result in a large number of queries being executed, which can slow down the performance of the application.
+
+
+
+GraphQL is a query language and runtime for APIs that can provide a more efficient and flexible way to fetch data than traditional REST APIs. Here are some benefits of GraphQL:
+-----------------------
+Efficiency
+---------------
+GraphQL allows clients to request exactly the data they need, avoiding over-fetching or under-fetching. This can improve application performance.
+
+Speed
+-----------
+GraphQL is faster than REST APIs, allowing users to pull data quickly and precisely without the need to send multiple queries.
+
+Simplicity
+-------------
+GraphQL simplifies API development and management. It provides a flexible and self-documenting schema, and developers can fetch data from multiple data sources on each API call.
+
+Error handling
+--------------
+GraphQL is a strongly typed API architecture, which means that it requires a detailed description of the data, its structure, and data operations in the schema. This allows the system to automatically identify request errors and provide useful error messages.
+
+Declarative data fetching
+-------------------------
+With GraphQL, there's no need to call multiple endpoints from the client or aggregate the data manually.
+
+Real-time data
+-----------------
+GraphQL supports real-time data updates through subscriptions.
+
+

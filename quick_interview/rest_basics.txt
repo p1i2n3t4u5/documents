@@ -1,0 +1,5 @@
+1)OPTIONS requests are an important part of the HTTP protocol that help determine what methods and headers are supported by a resource. They are a type of preflight request that is part of Cross-Origin Resource Sharing (CORS), which configures access to shared resources. 
+
+2)When a webpage makes a request to another server, the browser sends an OPTIONS request to check if the request is allowed. The OPTIONS request contains no body parameters and is sent with the following headers: Access-Control-Request-Method and Access-Control-Request-Headers. The server then returns a text/html content type, and the browser will only perform the request if it is allowed. OPTIONS requests are safe and idempotent, but not cacheable. 
+
+3)Using the information provided by an OPTIONS request can help software engineers make more efficient requests and avoid errors in their applications. However, enabling OPTIONS requests can also expose critical information about the server's capabilities, which may pose a security risk
